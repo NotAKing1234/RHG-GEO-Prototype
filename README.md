@@ -52,3 +52,5 @@ The longer-term path is an MCP-backed service that exposes run orchestration, me
 ## Future app audit scope
 
 The `/sources/app/` folder is a placeholder for future Radisson app metadata auditing. When activated, it will expand this workflow beyond the website to cover app store listings, deep-link structure, and app-specific discoverability signals.
+
+<!-- CHECKPOINT id="ckpt_mmywgfoh_5xc9a1" time="2026-03-20T12:53:06.017Z" note="auto" fixes=0 questions=0 highlights=0 sections="" -->
