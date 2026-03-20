@@ -19,7 +19,9 @@ Open this repository in Claude Code and type `/geo-run`.
 
 Claude Code should execute the full pipeline defined in `CLAUDE.md`: literature refresh, audit, gap analysis, targeted sub-agent research, optimization proposal, and memory updates.
 
-`sources/website/target_urls.md` contains all of the links that are researched. Please update this with all relevant links to ensure the suggestions are targeted for the appropriate sites.
+
+**IMPORTANT**
+`sources/website/target_urls.md` contains all of the links that are researched. Please update this with all relevant links to ensure the suggestions are targeted for the appropriate sites! Current links are placeholders!
 
 ## Folder structure
 
