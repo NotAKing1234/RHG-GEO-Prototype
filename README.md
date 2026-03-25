@@ -38,19 +38,6 @@ Claude Code should execute the full pipeline defined in `CLAUDE.md`: literature 
 - `runs/` - stores timestamped per-run artifacts such as snapshots, analyses, proposals, and reflections.
 - `inferred/implementation_log.md` - cumulative record of what Radisson appears to have implemented between runs.
 
-## Upgrade path
 
-### Stage 1: Claude Code workflow
-The current version is intentionally local and instruction-driven. Claude Code performs the research, auditing, reasoning, and file writing directly from `CLAUDE.md`, which keeps the system fast to start and easy to iterate.
-
-### Stage 2: `run.py` plus API automation
-The next step is to move the orchestration logic into `run.py` using API calls for web retrieval, page parsing, and structured proposal generation. At that point the repository can preserve the same folder conventions while making runs repeatable outside the Claude Code UI.
-
-### Stage 3: MCP server
-The longer-term path is an MCP-backed service that exposes run orchestration, memory access, auditing tools, and reporting as callable capabilities. That would make the optimizer easier to schedule, integrate, and operate as a shared system rather than a local-only workflow.
-
-## Future app audit scope
-
-The `/sources/app/` folder is a placeholder for future Radisson app metadata auditing. When activated, it will expand this workflow beyond the website to cover app store listings, deep-link structure, and app-specific discoverability signals.
 
 <!-- CHECKPOINT id="ckpt_mmywgfoh_5xc9a1" time="2026-03-20T12:53:06.017Z" note="auto" fixes=0 questions=0 highlights=0 sections="" -->
