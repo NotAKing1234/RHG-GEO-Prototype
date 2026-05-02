@@ -73,3 +73,48 @@ GAP-039: All brand pages missing US-origination geographic context (MISSING, Sev
 - Individual London property pages (2–3) to be audited for schema tier assessment.
 - Google Business Profile completeness for key European properties to be checked.
 - Radisson Rewards (Priority 3) due for inclusion.
+
+---
+
+### run_002 → run_003 | 2026-04-15 (26-day diff — first meaningful implementation window)
+
+**Implemented:** ZERO — 26 days post-run_002, zero observable changes. All homepage/brand page titles, meta descriptions, and body copy identical to run_002 snapshots. HTTP 403 blocking unchanged. /robots.txt still 403. /llms.txt still 403. No schema rich results detected.
+
+**What changed (non-implementation):**
+- Radisson Collection Lake Como now OPEN (Q1 2026) — was "planned" in run_002, now operational. Brand page still shows no reference. GAP escalated from WEAK to MISSING/CRITICAL.
+- Accor ChatGPT app launched Jan 29, 2026; Hyatt ChatGPT app Feb 2026; Hilton AI Planner Mar 2026. BCG "ask and book era" report March 30, 2026 confirmed transactional AI phase is live. AI distribution gap widened since run_002.
+- Radisson Blu London Bloomsbury OTA status: 4,423 TripAdvisor reviews; 5,693 Booking.com reviews — strong OTA footprint confirmed (positive). Q&A section (569 insider tips) on TripAdvisor.
+- Perplexity/Selfbook hotel booking integration confirmed live (140,000 hotels bookable end-to-end).
+- GBP (March 2026 core update): GBP now accounts for 32% of Local Pack ranking; feeds Google AI Overviews (40%+ of local queries).
+
+**Unchanged (all 17 run_003 proposals unchanged from run_002 targets):**
+- PROP-001 (Cloudflare fix): NOT IMPLEMENTED — 3rd consecutive unaddressed
+- PROP-002 (Hotel schema): NOT IMPLEMENTED — 3rd consecutive unaddressed
+- PROP-003 (FAQPage schema): NOT IMPLEMENTED — 3rd consecutive unaddressed
+- PROP-004 (Radisson Blu copy rewrite): NOT IMPLEMENTED — 3rd consecutive unaddressed
+- PROP-005 (Collection freshness content): NOT IMPLEMENTED — ESCALATED to CRITICAL
+- PROP-006 (Park Plaza bleisure title/meta): NOT IMPLEMENTED — 2nd consecutive
+- PROP-007 (Homepage title/meta): NOT IMPLEMENTED — 3rd consecutive
+- PROP-008 (llms.txt): NOT IMPLEMENTED — 2nd consecutive
+
+**New gaps identified (12 new, total 34 in run_003):**
+GAP-012: Radisson Blu /business-travel-offer — WEAK bleisure compound language (WEAK, Sev 2)
+GAP-023: Destination page — title purely navigational (MISSING, Sev 2) — first audit
+GAP-024: Destination page — no geographic entities (MISSING, Sev 2) — first audit
+GAP-025: Destination page — no bleisure signals (MISSING, Sev 1) — first audit
+GAP-026: Radisson Rewards — not surfacing in loyalty comparison AI responses (WEAK, Sev 2) — first audit
+GAP-027: Radisson Rewards — no American traveler signals (WEAK, Sev 2) — first audit
+GAP-028: Radisson Rewards — no MemberProgram/Organization schema (MISSING, Sev 1) — first audit
+GAP-029: Radisson Rewards — FAQ page exists but no FAQPage schema (WEAK, Sev 1) — first audit
+GAP-030: Portfolio — no direct AI distribution channel vs. Accor/Hyatt (MISSING, Sev 3) — CRITICAL
+GAP-031: Portfolio — individual property schema unconfirmable (MISSING, Sev 2)
+GAP-032: Portfolio — GBP completeness unconfirmed (WEAK, Sev 2) — first formal assessment
+GAP-034: Destination page — no ItemList schema (MISSING, Sev 2) — first audit
+
+**Run_004 tracking targets:**
+- Implementation indicators: robots.txt HTTP 200, any schema rich results in SERP, Rewards/Collection page copy changes, Selfbook/ChatGPT app announcement, Radisson Collection Lake Como reference on brand page.
+- Add standard Radisson brand page (/en-us/brand/radisson) to Priority 1 audit.
+- OTA spot-check: add Booking.com amenity attribute completeness check (not just review count).
+- GBP: check Q&A sections for flagship London/Amsterdam properties.
+- Property proxy: expand to 3 properties (London, Amsterdam, Paris).
+- Review recency check: TripAdvisor Radisson Blu London — are most recent reviews within 3 months?
