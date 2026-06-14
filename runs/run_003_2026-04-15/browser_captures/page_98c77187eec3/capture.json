@@ -1,0 +1,653 @@
+{
+  "status": "HTTP 403",
+  "source_url": "https://www.radissonhotels.com/en-us/brand/radisson-red?facilitatorId=RHGSEM&cid=a:ps+b:ggl+c:emea+i:brand+e:rdr+r:tlb+f:en-US+g:cl+h:Multiple+v:cf&gclsrc=aw.ds&gad_source=1&gad_campaignid=22103929875&gbraid=0AAAAADtKuEW4J6CSULgFojVJeXimurjSt&gclid=Cj0KCQjw4PPNBhD8ARIsAMo-icxml0jVJJo8AM-uLlkdbfvI0u2n9DGIu0CWXREwxdZGoNpem9KmYA0aAjWIEALw_wcB",
+  "final_url": "https://www.radissonhotels.com/en-us/brand/radisson-red?facilitatorId=RHGSEM&cid=a:ps+b:ggl+c:emea+i:brand+e:rdr+r:tlb+f:en-US+g:cl+h:Multiple+v:cf&gclsrc=aw.ds&gad_source=1&gad_campaignid=22103929875&gbraid=0AAAAADtKuEW4J6CSULgFojVJeXimurjSt&gclid=Cj0KCQjw4PPNBhD8ARIsAMo-icxml0jVJJo8AM-uLlkdbfvI0u2n9DGIu0CWXREwxdZGoNpem9KmYA0aAjWIEALw_wcB",
+  "screenshot_path": "runs/run_003_2026-04-15/browser_captures/page_98c77187eec3/screenshot.png",
+  "metadata": {
+    "title": "Access Restricted | Radisson Hotel Group",
+    "description": "",
+    "canonical": "",
+    "ogTitle": "",
+    "ogDescription": "",
+    "robots": ""
+  },
+  "headings": [
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > h1",
+      "tag": "h1",
+      "text": "Your access has been restricted"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > section.steps-section > h3",
+      "tag": "h3",
+      "text": "How to resolve this:"
+    },
+    {
+      "selector": "div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.app-promo:nth-of-type(1) > div.app-content:nth-of-type(2) > h3",
+      "tag": "h3",
+      "text": "Encountering issues?"
+    },
+    {
+      "selector": "#ot-pc-title",
+      "tag": "h2",
+      "text": "Privacy Preference Center"
+    },
+    {
+      "selector": "#ot-pc-title-mobile",
+      "tag": "h2",
+      "text": "Privacy Preference Center"
+    },
+    {
+      "selector": "#ot-pvcy-txt",
+      "tag": "h3",
+      "text": "Your Privacy"
+    },
+    {
+      "selector": "#ot-header-id-C0001",
+      "tag": "h3",
+      "text": "Necessary Cookies"
+    },
+    {
+      "selector": "#ot-header-id-C0002",
+      "tag": "h3",
+      "text": "Performance Cookies"
+    },
+    {
+      "selector": "#ot-header-id-C0003",
+      "tag": "h3",
+      "text": "Functional Cookies"
+    },
+    {
+      "selector": "#ot-header-id-C0004",
+      "tag": "h3",
+      "text": "Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "section.ot-hide.ot-pc-scrollbar > div.ot-lst-cntr.ot-pc-scrollbar:nth-of-type(1) > div > div:nth-of-type(1) > h3",
+      "tag": "h3",
+      "text": "Cookie List"
+    }
+  ],
+  "sections": [
+    {
+      "selector": "html > body > div.container:nth-of-type(1)",
+      "label": "Your access has been restricted",
+      "tag": "div",
+      "text": "Your access has been restricted For security reasons, your access to this page has been temporarily restricted. This may be due to automated detection. How to resolve this: Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution. Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App Need help? Europe +353 1 513 8380 Asia Pacific +1 402 415 0664 EMEA +353 1 513 8373 Your IP: 195.35.155.189 Ref Error: 0.85477b5c.1781440552.1ab42a0a © 2026 Radisson Hotel Group. All rights reserved."
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2)",
+      "label": "Your access has been restricted",
+      "tag": "div",
+      "text": "Your access has been restricted For security reasons, your access to this page has been temporarily restricted. This may be due to automated detection. How to resolve this: Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution. Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App Need help? Europe +353 1 513 8380 Asia Pacific +1 402 415 0664 EMEA +353 1 513 8373 Your IP: 195.35.155.189 Ref Error: 0.85477b5c.1781440552.1ab42a0a"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > p.alert-text",
+      "label": "For security reasons, your access to this page has been temporarily restricted. This may be due to automated detection.",
+      "tag": "p",
+      "text": "For security reasons, your access to this page has been temporarily restricted. This may be due to automated detection."
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > section.steps-section",
+      "label": "How to resolve this:",
+      "tag": "section",
+      "text": "How to resolve this: Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution."
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > section.steps-section > ul.steps-list",
+      "label": "Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version",
+      "tag": "ul",
+      "text": "Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution."
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.app-promo:nth-of-type(1)",
+      "label": "Encountering issues?",
+      "tag": "div",
+      "text": "Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.app-promo:nth-of-type(1) > div.app-content:nth-of-type(2)",
+      "label": "Encountering issues?",
+      "tag": "div",
+      "text": "Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.support-grid:nth-of-type(2)",
+      "label": "Need help? Europe +353 1 513 8380 Asia Pacific +1 402 415 0664 EMEA +353 1 513 8373",
+      "tag": "div",
+      "text": "Need help? Europe +353 1 513 8380 Asia Pacific +1 402 415 0664 EMEA +353 1 513 8373"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.support-grid:nth-of-type(2) > div.support-item:nth-of-type(2)",
+      "label": "Europe +353 1 513 8380",
+      "tag": "div",
+      "text": "Europe +353 1 513 8380"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.support-grid:nth-of-type(2) > div.support-item:nth-of-type(3)",
+      "label": "Asia Pacific +1 402 415 0664",
+      "tag": "div",
+      "text": "Asia Pacific +1 402 415 0664"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.tech-details:nth-of-type(3)",
+      "label": "Your IP: 195.35.155.189 Ref Error: 0.85477b5c.1781440552.1ab42a0a",
+      "tag": "div",
+      "text": "Your IP: 195.35.155.189 Ref Error: 0.85477b5c.1781440552.1ab42a0a"
+    },
+    {
+      "selector": "#onetrust-banner-sdk",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and ",
+      "tag": "div",
+      "text": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\". Accept all cookiesAccept essential cookies onlyCookie Settings"
+    },
+    {
+      "selector": "body > div:nth-of-type(2) > div.otFlat.bottom:nth-of-type(2) > div > div.ot-sdk-container:nth-of-type(1)",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and ",
+      "tag": "div",
+      "text": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\". Accept all cookiesAccept essential cookies onlyCookie Settings"
+    },
+    {
+      "selector": "div:nth-of-type(2) > div.otFlat.bottom:nth-of-type(2) > div > div.ot-sdk-container:nth-of-type(1) > div.ot-sdk-row",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and ",
+      "tag": "div",
+      "text": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\". Accept all cookiesAccept essential cookies onlyCookie Settings"
+    },
+    {
+      "selector": "#onetrust-group-container",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and ",
+      "tag": "div",
+      "text": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\"."
+    },
+    {
+      "selector": "#onetrust-button-group-parent",
+      "label": "Accept all cookiesAccept essential cookies onlyCookie Settings",
+      "tag": "div",
+      "text": "Accept all cookiesAccept essential cookies onlyCookie Settings"
+    },
+    {
+      "selector": "#onetrust-pc-sdk",
+      "label": "Privacy Preference Center",
+      "tag": "div",
+      "text": "Privacy Preference CenterPrivacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting CookiesYour PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features"
+    },
+    {
+      "selector": "body > div:nth-of-type(2) > div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-header:nth-of-type(1)",
+      "label": "Privacy Preference Center",
+      "tag": "div",
+      "text": "Privacy Preference Center"
+    },
+    {
+      "selector": "div:nth-of-type(2) > div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-header:nth-of-type(1) > div.ot-title-cntr:nth-of-type(2)",
+      "label": "Privacy Preference Center",
+      "tag": "div",
+      "text": "Privacy Preference Center"
+    },
+    {
+      "selector": "#ot-pc-content",
+      "label": "Privacy Preference Center",
+      "tag": "div",
+      "text": "Privacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting CookiesYour PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function"
+    },
+    {
+      "selector": "div:nth-of-type(2) > div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2)",
+      "label": "Privacy Preference Center",
+      "tag": "div",
+      "text": "Privacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting CookiesYour PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function"
+    },
+    {
+      "selector": "div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1)",
+      "label": "Privacy Preference Center",
+      "tag": "div",
+      "text": "Privacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting Cookies"
+    },
+    {
+      "selector": "div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1) > ul.ot-cat-grp",
+      "label": "Your Privacy",
+      "tag": "ul",
+      "text": "Your PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1) > ul.ot-cat-grp > li.ot-cat-item.ot-vs-config:nth-of-type(5)",
+      "label": "Advertising/Targeting Cookies",
+      "tag": "li",
+      "text": "Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1) > ul.ot-cat-grp > li.ot-cat-item.ot-vs-config:nth-of-type(5) > div.category-menu-switch-handler",
+      "label": "Advertising/Targeting Cookies",
+      "tag": "div",
+      "text": "Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2)",
+      "label": "Your PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you",
+      "tag": "div",
+      "text": "Your PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function. They are set to provide a service you have requested, such as logging in to your profile, making a reservation, or rem"
+    },
+    {
+      "selector": "#ot-tab-desc",
+      "label": "Your PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you",
+      "tag": "div",
+      "text": "Your PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More information"
+    },
+    {
+      "selector": "#ot-pc-desc",
+      "label": "When you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your prefe",
+      "tag": "p",
+      "text": "When you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More information"
+    },
+    {
+      "selector": "#ot-desc-id-C0001",
+      "label": "Necessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function. They are set to provide a service you have reque",
+      "tag": "div",
+      "text": "Necessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function. They are set to provide a service you have requested, such as logging in to your profile, making a reservation, or remembering the preferences you set in your profile. Necessary Cookies are also enabled for security reasons, such as preventing the fraudulent use of your login credentials and to protect our servers and your data from unauthorized users. Cookies Details"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(2) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Necessary CookiesAlways Active",
+      "tag": "div",
+      "text": "Necessary CookiesAlways Active"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(2) > p.ot-grp-desc.ot-category-desc",
+      "label": "These Cookies are required to enable the basic features of this site to function. They are set to provide a service you have requested, such as logging in to yo",
+      "tag": "p",
+      "text": "These Cookies are required to enable the basic features of this site to function. They are set to provide a service you have requested, such as logging in to your profile, making a reservation, or remembering the preferences you set in your profile. Necessary Cookies are also enabled for security reasons, such as preventing the fraudulent use of your login credentials and to protect our servers and your data from unauthorized users."
+    },
+    {
+      "selector": "#ot-desc-id-C0002",
+      "label": "Performance Cookies Performance Cookies These Cookies allow us to collect information to improve our website and identify any problems that you may have faced w",
+      "tag": "div",
+      "text": "Performance Cookies Performance Cookies These Cookies allow us to collect information to improve our website and identify any problems that you may have faced while visiting us. We also use these Cookies for statistical and analytics information, for example to see how many visitors our website received or to identify our most popular pages and content.Cookies Details"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(3) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Performance Cookies Performance Cookies",
+      "tag": "div",
+      "text": "Performance Cookies Performance Cookies"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(3) > p.ot-grp-desc.ot-category-desc",
+      "label": "These Cookies allow us to collect information to improve our website and identify any problems that you may have faced while visiting us. We also use these Cook",
+      "tag": "p",
+      "text": "These Cookies allow us to collect information to improve our website and identify any problems that you may have faced while visiting us. We also use these Cookies for statistical and analytics information, for example to see how many visitors our website received or to identify our most popular pages and content."
+    },
+    {
+      "selector": "#ot-desc-id-C0003",
+      "label": "Functional Cookies Functional Cookies These Cookies enable the website to provide enhanced functions and personalization, such as remembering your location, you",
+      "tag": "div",
+      "text": "Functional Cookies Functional Cookies These Cookies enable the website to provide enhanced functions and personalization, such as remembering your location, your chosen language or other settings to provide a personalised user experience.Cookies Details"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(4) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Functional Cookies Functional Cookies",
+      "tag": "div",
+      "text": "Functional Cookies Functional Cookies"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(4) > p.ot-grp-desc.ot-category-desc",
+      "label": "These Cookies enable the website to provide enhanced functions and personalization, such as remembering your location, your chosen language or other settings to",
+      "tag": "p",
+      "text": "These Cookies enable the website to provide enhanced functions and personalization, such as remembering your location, your chosen language or other settings to provide a personalised user experience."
+    },
+    {
+      "selector": "#ot-desc-id-C0004",
+      "label": "Advertising/Targeting Cookies Advertising/Targeting Cookies These Cookies enable us to better understand your usage habits, interactions and preferences. They c",
+      "tag": "div",
+      "text": "Advertising/Targeting Cookies Advertising/Targeting Cookies These Cookies enable us to better understand your usage habits, interactions and preferences. They can be set by us and/or our partners to create a profile of your interests and to offer you relevant advertising that we believe will be relevant for you.Cookies Details"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(5) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Advertising/Targeting Cookies Advertising/Targeting Cookies",
+      "tag": "div",
+      "text": "Advertising/Targeting Cookies Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(5) > div.ot-grp-hdr1:nth-of-type(1) > h4.ot-cat-header",
+      "label": "Advertising/Targeting Cookies",
+      "tag": "h4",
+      "text": "Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(5) > div.ot-grp-hdr1:nth-of-type(1) > div.ot-tgl:nth-of-type(1)",
+      "label": "Advertising/Targeting Cookies",
+      "tag": "div",
+      "text": "Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(5) > div.ot-grp-hdr1:nth-of-type(1) > div.ot-tgl:nth-of-type(1) > label.ot-switch",
+      "label": "Advertising/Targeting Cookies",
+      "tag": "label",
+      "text": "Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.ot-desc-cntr.ot-hide:nth-of-type(5) > div.ot-grp-hdr1:nth-of-type(1) > div.ot-tgl:nth-of-type(1) > label.ot-switch > span.ot-label-txt:nth-of-type(2)",
+      "label": "Advertising/Targeting Cookies",
+      "tag": "span",
+      "text": "Advertising/Targeting Cookies"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(5) > p.ot-grp-desc.ot-category-desc",
+      "label": "These Cookies enable us to better understand your usage habits, interactions and preferences. They can be set by us and/or our partners to create a profile of y",
+      "tag": "p",
+      "text": "These Cookies enable us to better understand your usage habits, interactions and preferences. They can be set by us and/or our partners to create a profile of your interests and to offer you relevant advertising that we believe will be relevant for you."
+    },
+    {
+      "selector": "#ot-pc-lst",
+      "label": "Cookie List",
+      "tag": "section",
+      "text": "Back ButtonCookie List Filter ButtonConsent Leg.Interest checkbox label label checkbox label label checkbox label labelClear checkbox label labelApply Cancel"
+    },
+    {
+      "selector": "div:nth-of-type(2) > div.otPcTab.ot-hide:nth-of-type(3) > div > section.ot-hide.ot-pc-scrollbar > div.ot-lst-cntr.ot-pc-scrollbar:nth-of-type(1)",
+      "label": "Cookie List",
+      "tag": "div",
+      "text": "Back ButtonCookie List Filter ButtonConsent Leg.Interest checkbox label label checkbox label label checkbox label label"
+    },
+    {
+      "selector": "#ot-lst-cnt",
+      "label": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label",
+      "tag": "section",
+      "text": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label"
+    },
+    {
+      "selector": "div > section.ot-hide.ot-pc-scrollbar > div.ot-lst-cntr.ot-pc-scrollbar:nth-of-type(1) > section.ot-pc-scrollbar > div.ot-sdk-row",
+      "label": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label",
+      "tag": "div",
+      "text": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label"
+    },
+    {
+      "selector": "section.ot-hide.ot-pc-scrollbar > div.ot-lst-cntr.ot-pc-scrollbar:nth-of-type(1) > section.ot-pc-scrollbar > div.ot-sdk-row > div.ot-sdk-column",
+      "label": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label",
+      "tag": "div",
+      "text": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label"
+    },
+    {
+      "selector": "section.ot-pc-scrollbar > div.ot-sdk-row > div.ot-sdk-column > div > div.ot-sel-all",
+      "label": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label",
+      "tag": "div",
+      "text": "Consent Leg.Interest checkbox label label checkbox label label checkbox label label"
+    },
+    {
+      "selector": "div.ot-sdk-row > div.ot-sdk-column > div > div.ot-sel-all > div.ot-sel-all-chkbox:nth-of-type(2)",
+      "label": "checkbox label label checkbox label label checkbox label label",
+      "tag": "div",
+      "text": "checkbox label label checkbox label label checkbox label label"
+    },
+    {
+      "selector": "#ot-fltr-modal",
+      "label": "Clear checkbox label labelApply Cancel",
+      "tag": "section",
+      "text": "Clear checkbox label labelApply Cancel"
+    },
+    {
+      "selector": "div > section.ot-hide.ot-pc-scrollbar > section > div > fieldset.ot-fltr-scrlcnt.ot-pc-scrollbar",
+      "label": "checkbox label labelApply Cancel",
+      "tag": "fieldset",
+      "text": "checkbox label labelApply Cancel"
+    }
+  ],
+  "selector_candidates": [
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > h1",
+      "label": "Your access has been restricted",
+      "type": "h1"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > section.steps-section > h3",
+      "label": "How to resolve this:",
+      "type": "h3"
+    },
+    {
+      "selector": "div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.app-promo:nth-of-type(1) > div.app-content:nth-of-type(2) > h3",
+      "label": "Encountering issues?",
+      "type": "h3"
+    },
+    {
+      "selector": "#ot-pc-title",
+      "label": "Privacy Preference Center",
+      "type": "h2"
+    },
+    {
+      "selector": "#ot-pc-title-mobile",
+      "label": "Privacy Preference Center",
+      "type": "h2"
+    },
+    {
+      "selector": "#ot-pvcy-txt",
+      "label": "Your Privacy",
+      "type": "h3"
+    },
+    {
+      "selector": "#ot-header-id-C0001",
+      "label": "Necessary Cookies",
+      "type": "h3"
+    },
+    {
+      "selector": "#ot-header-id-C0002",
+      "label": "Performance Cookies",
+      "type": "h3"
+    },
+    {
+      "selector": "#ot-header-id-C0003",
+      "label": "Functional Cookies",
+      "type": "h3"
+    },
+    {
+      "selector": "#ot-header-id-C0004",
+      "label": "Advertising/Targeting Cookies",
+      "type": "h3"
+    },
+    {
+      "selector": "section.ot-hide.ot-pc-scrollbar > div.ot-lst-cntr.ot-pc-scrollbar:nth-of-type(1) > div > div:nth-of-type(1) > h3",
+      "label": "Cookie List",
+      "type": "h3"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1)",
+      "label": "Your access has been restricted For security reasons, your access to this page has been temporarily restricted. This may be due to automated detection. How to resolve this: Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution. Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App Need help? Europe +353 1 513 8380 Asia Pacific +1 402 415 0664 EMEA +353 1 513 8373 Your IP: 195.35.155.189 Ref Error: 0.85477b5c.1781440552.1ab42a0a © 2026 Radisson Hotel Group. All rights reserved.",
+      "type": "div"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2)",
+      "label": "Your access has been restricted For security reasons, your access to this page has been temporarily restricted. This may be due to automated detection. How to resolve this: Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution. Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App Need help? Europe +353 1 513 8380 Asia Pacific +1 402 415 0664 EMEA +353 1 513 8373 Your IP: 195.35.155.189 Ref Error: 0.85477b5c.1781440552.1ab42a0a",
+      "type": "div"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > p.alert-text",
+      "label": "For security reasons, your access to this page has been temporarily restricted. This may be due to automated detection.",
+      "type": "p"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > section.steps-section",
+      "label": "How to resolve this: Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution.",
+      "type": "section"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > section.steps-section > ul.steps-list",
+      "label": "Clear Cookies: Clear browser cookies and cache. Disconnect VPN: Disable any active VPNs or Proxies. Update Browser: Ensure your browser is on the latest version or switch to a different browser (e.g., Chrome, Firefox, or Edge). Disable Extensions: Turn off extensions that may interfere with network headers or script execution.",
+      "type": "ul"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.app-promo:nth-of-type(1)",
+      "label": "Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App",
+      "type": "div"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.app-promo:nth-of-type(1) > div.app-content:nth-of-type(2)",
+      "label": "Encountering issues? Skip the wait and book instantly via our secure mobile app with Member Only rates. Continue in App",
+      "type": "div"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.support-grid:nth-of-type(2)",
+      "label": "Need help? Europe +353 1 513 8380 Asia Pacific +1 402 415 0664 EMEA +353 1 513 8373",
+      "type": "div"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.support-grid:nth-of-type(2) > div.support-item:nth-of-type(2)",
+      "label": "Europe +353 1 513 8380",
+      "type": "div"
+    },
+    {
+      "selector": "body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.support-grid:nth-of-type(2) > div.support-item:nth-of-type(3)",
+      "label": "Asia Pacific +1 402 415 0664",
+      "type": "div"
+    },
+    {
+      "selector": "html > body > div.container:nth-of-type(1) > div.card:nth-of-type(2) > div.tech-details:nth-of-type(3)",
+      "label": "Your IP: 195.35.155.189 Ref Error: 0.85477b5c.1781440552.1ab42a0a",
+      "type": "div"
+    },
+    {
+      "selector": "#onetrust-banner-sdk",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\". Accept all cookiesAccept essential cookies onlyCookie Settings",
+      "type": "div"
+    },
+    {
+      "selector": "body > div:nth-of-type(2) > div.otFlat.bottom:nth-of-type(2) > div > div.ot-sdk-container:nth-of-type(1)",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\". Accept all cookiesAccept essential cookies onlyCookie Settings",
+      "type": "div"
+    },
+    {
+      "selector": "div:nth-of-type(2) > div.otFlat.bottom:nth-of-type(2) > div > div.ot-sdk-container:nth-of-type(1) > div.ot-sdk-row",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\". Accept all cookiesAccept essential cookies onlyCookie Settings",
+      "type": "div"
+    },
+    {
+      "selector": "#onetrust-group-container",
+      "label": "This website uses Cookies and related technologies (such as web beacons, pixel tags and Flash objects) (“Cookies”) to make sure it is functioning correctly and securely, to improve and personalise your ads and browsing experience, to analyse website traffic and usage, to remember your settings, and to support our marketing and sales efforts. By selecting \"Accept all cookies\", you agree that Radisson may collect data about you and use Cookies as described in our Privacy Notice [Click Here] and our Cookies and Related Technologies Notice [Click Here]. If you select \"Accept essential cookies only\", we will only store Cookies that are strictly necessary for the proper functioning of the website. If you wish to make more specific choices, select \"Cookie settings\".",
+      "type": "div"
+    },
+    {
+      "selector": "#onetrust-button-group-parent",
+      "label": "Accept all cookiesAccept essential cookies onlyCookie Settings",
+      "type": "div"
+    },
+    {
+      "selector": "#onetrust-pc-sdk",
+      "label": "Privacy Preference CenterPrivacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting CookiesYour PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features",
+      "type": "div"
+    },
+    {
+      "selector": "body > div:nth-of-type(2) > div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-header:nth-of-type(1)",
+      "label": "Privacy Preference Center",
+      "type": "div"
+    },
+    {
+      "selector": "div:nth-of-type(2) > div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-header:nth-of-type(1) > div.ot-title-cntr:nth-of-type(2)",
+      "label": "Privacy Preference Center",
+      "type": "div"
+    },
+    {
+      "selector": "#ot-pc-content",
+      "label": "Privacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting CookiesYour PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function",
+      "type": "div"
+    },
+    {
+      "selector": "div:nth-of-type(2) > div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2)",
+      "label": "Privacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting CookiesYour PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function",
+      "type": "div"
+    },
+    {
+      "selector": "div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1)",
+      "label": "Privacy Preference CenterYour PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting Cookies",
+      "type": "div"
+    },
+    {
+      "selector": "div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1) > ul.ot-cat-grp",
+      "label": "Your PrivacyNecessary CookiesPerformance CookiesFunctional CookiesAdvertising/Targeting Cookies",
+      "type": "ul"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1) > ul.ot-cat-grp > li.ot-cat-item.ot-vs-config:nth-of-type(5)",
+      "label": "Advertising/Targeting Cookies",
+      "type": "li"
+    },
+    {
+      "selector": "div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-sdk-four.ot-sdk-columns:nth-of-type(1) > ul.ot-cat-grp > li.ot-cat-item.ot-vs-config:nth-of-type(5) > div.category-menu-switch-handler",
+      "label": "Advertising/Targeting Cookies",
+      "type": "div"
+    },
+    {
+      "selector": "div.otPcTab.ot-hide:nth-of-type(3) > div > div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2)",
+      "label": "Your PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More informationNecessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function. They are set to provide a service you have requested, such as logging in to your profile, making a reservation, or rem",
+      "type": "div"
+    },
+    {
+      "selector": "#ot-tab-desc",
+      "label": "Your PrivacyWhen you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More information",
+      "type": "div"
+    },
+    {
+      "selector": "#ot-pc-desc",
+      "label": "When you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device, and is mostly used to make the site work as you expect. The information does not usually identify you directly, but it can give you a more personalized web experience. Because we respect your right to privacy, you can choose not to allow some types of cookies. Click on the different category headings to learn more and change our default settings. Blocking some types of cookies may impact your experience of the site and the services we are able to offer. More information",
+      "type": "p"
+    },
+    {
+      "selector": "#ot-desc-id-C0001",
+      "label": "Necessary CookiesAlways ActiveThese Cookies are required to enable the basic features of this site to function. They are set to provide a service you have requested, such as logging in to your profile, making a reservation, or remembering the preferences you set in your profile. Necessary Cookies are also enabled for security reasons, such as preventing the fraudulent use of your login credentials and to protect our servers and your data from unauthorized users. Cookies Details",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(2) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Necessary CookiesAlways Active",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(2) > p.ot-grp-desc.ot-category-desc",
+      "label": "These Cookies are required to enable the basic features of this site to function. They are set to provide a service you have requested, such as logging in to your profile, making a reservation, or remembering the preferences you set in your profile. Necessary Cookies are also enabled for security reasons, such as preventing the fraudulent use of your login credentials and to protect our servers and your data from unauthorized users.",
+      "type": "p"
+    },
+    {
+      "selector": "#ot-desc-id-C0002",
+      "label": "Performance Cookies Performance Cookies These Cookies allow us to collect information to improve our website and identify any problems that you may have faced while visiting us. We also use these Cookies for statistical and analytics information, for example to see how many visitors our website received or to identify our most popular pages and content.Cookies Details",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(3) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Performance Cookies Performance Cookies",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(3) > p.ot-grp-desc.ot-category-desc",
+      "label": "These Cookies allow us to collect information to improve our website and identify any problems that you may have faced while visiting us. We also use these Cookies for statistical and analytics information, for example to see how many visitors our website received or to identify our most popular pages and content.",
+      "type": "p"
+    },
+    {
+      "selector": "#ot-desc-id-C0003",
+      "label": "Functional Cookies Functional Cookies These Cookies enable the website to provide enhanced functions and personalization, such as remembering your location, your chosen language or other settings to provide a personalised user experience.Cookies Details",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(4) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Functional Cookies Functional Cookies",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(4) > p.ot-grp-desc.ot-category-desc",
+      "label": "These Cookies enable the website to provide enhanced functions and personalization, such as remembering your location, your chosen language or other settings to provide a personalised user experience.",
+      "type": "p"
+    },
+    {
+      "selector": "#ot-desc-id-C0004",
+      "label": "Advertising/Targeting Cookies Advertising/Targeting Cookies These Cookies enable us to better understand your usage habits, interactions and preferences. They can be set by us and/or our partners to create a profile of your interests and to offer you relevant advertising that we believe will be relevant for you.Cookies Details",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-pc-scrollbar.ot-sdk-row:nth-of-type(2) > div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(5) > div.ot-grp-hdr1:nth-of-type(1)",
+      "label": "Advertising/Targeting Cookies Advertising/Targeting Cookies",
+      "type": "div"
+    },
+    {
+      "selector": "div.ot-sdk-container.ot-grps-cntr:nth-of-type(2) > div.ot-tab-desc.ot-sdk-eight:nth-of-type(2) > div.ot-desc-cntr.ot-hide:nth-of-type(5) > div.ot-grp-hdr1:nth-of-type(1) > h4.ot-cat-header",
+      "label": "Advertising/Targeting Cookies",
+      "type": "h4"
+    }
+  ],
+  "dom_snapshot_path": "runs/run_003_2026-04-15/browser_captures/page_98c77187eec3/dom_snapshot.html",
+  "warnings": [],
+  "capture_method": "playwright",
+  "url": "https://www.radissonhotels.com/en-us/brand/radisson-red",
+  "captured_at": "2026-06-14T14:35:54"
+}

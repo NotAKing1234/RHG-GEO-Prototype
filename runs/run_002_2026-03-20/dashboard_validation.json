@@ -1,0 +1,92 @@
+{
+  "status": "passed",
+  "error_count": 0,
+  "warning_count": 20,
+  "errors": [],
+  "warnings": [
+    {
+      "type": "blank_target_url",
+      "line": 9,
+      "message": "Blank target URL bullet"
+    },
+    {
+      "type": "duplicate_target_url",
+      "line": 19,
+      "firstLine": 13,
+      "url": "https://www.radissonhotels.com/en-us/hotel-deals"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-003"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-004"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-005"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-006"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-001"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-001"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-002"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-011"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-011"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-007"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-008"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-013"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-014"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-009"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-009"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-010"
+    },
+    {
+      "type": "missing_page_ref",
+      "proposal_id": "PROP-012"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-012"
+    }
+  ],
+  "generated_at": "2026-06-14T14:06:55"
+}

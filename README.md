@@ -19,6 +19,27 @@ Open this repository in Claude Code and type `/geo-run`.
 
 Claude Code should execute the full pipeline defined in `CLAUDE.md`: literature refresh, audit, gap analysis, targeted sub-agent research, optimization proposal, and memory updates.
 
+## Local dashboard
+
+A local operator dashboard is available in `dashboard/`. It wraps the existing `run.py` workflow, displays run status and artifacts, summarizes historical gaps/proposals, and lets you edit `sources/website/target_urls.md`.
+
+Start the API server:
+
+```bash
+cd dashboard
+npm install
+npm run backend
+```
+
+Start the frontend in a second terminal:
+
+```bash
+cd dashboard
+npm run dev
+```
+
+Then open `http://127.0.0.1:5173`.
+
 
 **IMPORTANT**
 `sources/website/target_urls.md` contains all of the links that are researched. Please update this with all relevant links to ensure the suggestions are targeted for the appropriate sites! Current links are placeholders!

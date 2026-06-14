@@ -1,0 +1,99 @@
+{
+  "run_id": "run_003",
+  "imports": [
+    {
+      "import_id": "run_003_20260614T140655261121",
+      "run_id": "run_003",
+      "imported_at": "2026-06-14T14:06:55",
+      "dashboard_data": "runs/run_003_2026-04-15/dashboard_imports/run_003_20260614T140655261121/dashboard_data.json",
+      "dashboard_validation": "runs/run_003_2026-04-15/dashboard_imports/run_003_20260614T140655261121/dashboard_validation.json",
+      "source_file_mtimes": {
+        "metadata_snapshot": 1777726379.7685928,
+        "context_brief": 1777726379.7675984,
+        "gap_analysis": 1777726379.7677808,
+        "gap_research": 1777726379.768112,
+        "optimization_proposal": 1777726379.7688208,
+        "log_reflection": 1777726379.7683725,
+        "literature_sources": 1777726379.7668414,
+        "criteria_framework": 1777726379.7661884
+      },
+      "summary": {
+        "pages": 10,
+        "sources": 97,
+        "criteria": 17,
+        "gaps": 34,
+        "recommendations": 17,
+        "copy_blocks": 59,
+        "metadata_changes": 22,
+        "implementation_ready": 17,
+        "selector_warnings": 5
+      },
+      "validation_status": "passed",
+      "validation_errors": 0,
+      "validation_warnings": 7
+    },
+    {
+      "import_id": "run_003_20260614T143602618974",
+      "run_id": "run_003",
+      "imported_at": "2026-06-14T14:36:02",
+      "dashboard_data": "runs/run_003_2026-04-15/dashboard_imports/run_003_20260614T143602618974/dashboard_data.json",
+      "dashboard_validation": "runs/run_003_2026-04-15/dashboard_imports/run_003_20260614T143602618974/dashboard_validation.json",
+      "source_file_mtimes": {
+        "metadata_snapshot": 1777726379.7685928,
+        "context_brief": 1777726379.7675984,
+        "gap_analysis": 1777726379.7677808,
+        "gap_research": 1777726379.768112,
+        "optimization_proposal": 1777726379.7688208,
+        "log_reflection": 1777726379.7683725,
+        "literature_sources": 1777726379.7668414,
+        "criteria_framework": 1777726379.7661884
+      },
+      "summary": {
+        "pages": 10,
+        "sources": 97,
+        "criteria": 17,
+        "gaps": 34,
+        "recommendations": 17,
+        "copy_blocks": 59,
+        "metadata_changes": 22,
+        "implementation_ready": 17,
+        "selector_warnings": 5
+      },
+      "validation_status": "passed",
+      "validation_errors": 0,
+      "validation_warnings": 7
+    },
+    {
+      "import_id": "run_003_20260614T143716903830",
+      "run_id": "run_003",
+      "imported_at": "2026-06-14T14:37:16",
+      "dashboard_data": "runs/run_003_2026-04-15/dashboard_imports/run_003_20260614T143716903830/dashboard_data.json",
+      "dashboard_validation": "runs/run_003_2026-04-15/dashboard_imports/run_003_20260614T143716903830/dashboard_validation.json",
+      "source_file_mtimes": {
+        "metadata_snapshot": 1777726379.7685928,
+        "context_brief": 1777726379.7675984,
+        "gap_analysis": 1777726379.7677808,
+        "gap_research": 1777726379.768112,
+        "optimization_proposal": 1777726379.7688208,
+        "log_reflection": 1777726379.7683725,
+        "literature_sources": 1777726379.7668414,
+        "criteria_framework": 1777726379.7661884
+      },
+      "summary": {
+        "pages": 10,
+        "sources": 97,
+        "criteria": 17,
+        "gaps": 34,
+        "recommendations": 17,
+        "copy_blocks": 59,
+        "metadata_changes": 22,
+        "implementation_ready": 17,
+        "selector_warnings": 5
+      },
+      "validation_status": "passed",
+      "validation_errors": 0,
+      "validation_warnings": 7
+    }
+  ],
+  "updated_at": "2026-06-14T14:37:16"
+}

@@ -1,0 +1,37 @@
+{
+  "run_id": "run_002",
+  "imports": [
+    {
+      "import_id": "run_002_20260614T140655078791",
+      "run_id": "run_002",
+      "imported_at": "2026-06-14T14:06:55",
+      "dashboard_data": "runs/run_002_2026-03-20/dashboard_imports/run_002_20260614T140655078791/dashboard_data.json",
+      "dashboard_validation": "runs/run_002_2026-03-20/dashboard_imports/run_002_20260614T140655078791/dashboard_validation.json",
+      "source_file_mtimes": {
+        "metadata_snapshot": 1774198081.4327784,
+        "context_brief": 1774020044.2121305,
+        "gap_analysis": 1774198163.0356991,
+        "gap_research": 1774198587.3227599,
+        "optimization_proposal": 1774198813.9965608,
+        "log_reflection": 1774198883.8177147,
+        "literature_sources": 1774019865.5825841,
+        "criteria_framework": 1774019948.718213
+      },
+      "summary": {
+        "pages": 10,
+        "sources": 40,
+        "criteria": 15,
+        "gaps": 14,
+        "recommendations": 14,
+        "copy_blocks": 14,
+        "metadata_changes": 12,
+        "implementation_ready": 0,
+        "selector_warnings": 4
+      },
+      "validation_status": "passed",
+      "validation_errors": 0,
+      "validation_warnings": 20
+    }
+  ],
+  "updated_at": "2026-06-14T14:06:55"
+}

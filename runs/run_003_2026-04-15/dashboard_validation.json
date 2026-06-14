@@ -1,0 +1,40 @@
+{
+  "status": "passed",
+  "error_count": 0,
+  "warning_count": 7,
+  "errors": [],
+  "warnings": [
+    {
+      "type": "blank_target_url",
+      "line": 9,
+      "message": "Blank target URL bullet"
+    },
+    {
+      "type": "duplicate_target_url",
+      "line": 19,
+      "firstLine": 13,
+      "url": "https://www.radissonhotels.com/en-us/hotel-deals"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-004"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-001"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-012"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-009"
+    },
+    {
+      "type": "unvalidated_selector",
+      "proposal_id": "PROP-008"
+    }
+  ],
+  "generated_at": "2026-06-14T14:39:47"
+}
