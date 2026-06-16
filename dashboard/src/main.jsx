@@ -28,7 +28,8 @@ import {
 import "./styles.css";
 
 const VIEWS = [
-  { id: "recommendations", label: "Recommendations", icon: SlidersHorizontal },
+  { id: "overview", label: "Overview", icon: BarChart3 },
+  { id: "recommendations", label: "Signal Console", icon: SlidersHorizontal },
   { id: "pages", label: "Radisson Pages", icon: Globe2 },
   { id: "sources", label: "Sources", icon: BookOpen },
   { id: "metadata", label: "Metadata", icon: Table2 },
@@ -65,7 +66,7 @@ async function request(path, options = {}) {
 }
 
 function App() {
-  const [view, setView] = useState("recommendations");
+  const [view, setView] = useState("overview");
   const [runs, setRuns] = useState([]);
   const [selectedRunId, setSelectedRunId] = usePersistentState("geo:selectedRunId", "");
   const [filters, setFilters] = usePersistentObject("geo:filters", DEFAULT_FILTERS);
@@ -172,6 +173,7 @@ function App() {
     [data, selectedRecommendationId, recommendations]
   );
   const lookups = useMemo(() => buildLookups(data), [data]);
+  const activeView = VIEWS.find((item) => item.id === view) || VIEWS[0];
 
   return (
     <div className="app-shell">
@@ -207,10 +209,19 @@ function App() {
       <main className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyeline">Internal audit tool</p>
-            <h2>Recommendation-first GEOptimizer research</h2>
+            <p className="eyeline">Radisson audit dashboard</p>
+            <h2>{activeView.id === "overview" ? "GeoOptimizer Overview" : activeView.label}</h2>
+            <p className="topbar-subtitle">{data?.run?.run_id || "Run"} · {data?.run?.date || "No date loaded"}</p>
           </div>
           <div className="topbar-actions">
+            <label className="global-search">
+              <Search size={16} />
+              <input
+                value={filters.query}
+                onChange={(event) => setFilters({ ...filters, query: event.target.value })}
+                placeholder="Search recommendations, pages, sources..."
+              />
+            </label>
             <label className="run-select">
               Run
               <select value={selectedRunId} onChange={(event) => setSelectedRunId(event.target.value)}>
@@ -245,20 +256,30 @@ function App() {
           </div>
         ) : (
           <>
-            <SummaryBar data={data} />
-            {view === "recommendations" && (
-              <RecommendationsView
+            {view === "overview" && (
+              <OverviewView
                 data={data}
-                recommendations={recommendations}
-                selectedRecommendation={selectedRecommendation}
-                selectedRecommendationId={selectedRecommendationId}
-                filters={filters}
-                setFilters={setFilters}
+                runs={runs}
+                setView={setView}
                 setSelectedRecommendationId={setSelectedRecommendationId}
-                lookups={lookups}
-                saveOverride={saveOverride}
-                busy={busy}
               />
+            )}
+            {view === "recommendations" && (
+              <>
+                <SummaryBar data={data} />
+                <RecommendationsView
+                  data={data}
+                  recommendations={recommendations}
+                  selectedRecommendation={selectedRecommendation}
+                  selectedRecommendationId={selectedRecommendationId}
+                  filters={filters}
+                  setFilters={setFilters}
+                  setSelectedRecommendationId={setSelectedRecommendationId}
+                  lookups={lookups}
+                  saveOverride={saveOverride}
+                  busy={busy}
+                />
+              </>
             )}
             {view === "pages" && (
               <PagesView
@@ -301,6 +322,170 @@ function SummaryBar({ data }) {
       <Metric label="Selector Warnings" value={data.summary?.selector_warnings || 0} danger={Boolean(data.summary?.selector_warnings)} />
       <Metric label="Validation Errors" value={validationCount} danger={Boolean(validationCount)} />
     </section>
+  );
+}
+
+function OverviewView({ data, runs, setView, setSelectedRecommendationId }) {
+  const metrics = getOverviewMetrics(data);
+  const topActions = topRecommendations(data.recommendations || [], 5);
+  const selectedAction = topActions[0];
+  const chartPoints = readinessSeries(data.recommendations || []);
+
+  function openRecommendation(id) {
+    setSelectedRecommendationId(id);
+    setView("recommendations");
+  }
+
+  return (
+    <section className="overview-shell">
+      <div className="overview-hero">
+        <div className="readiness-panel">
+          <span className="eyeline">GEO readiness</span>
+          <strong>{metrics.readiness}</strong>
+          <p>Overall readiness for AI search visibility</p>
+          <div className="readiness-facts">
+            <div><b>{metrics.recommendations}</b><span>Recommendations</span></div>
+            <div><b>{metrics.ready}</b><span>Implementation-ready</span></div>
+            <div><b>{metrics.sources}</b><span>Sources</span></div>
+          </div>
+        </div>
+        <div className="priority-panel">
+          <PanelHeader icon={BarChart3} label="Priority" title="Action Profile" />
+          <PriorityBars rows={priorityRows(data)} />
+        </div>
+      </div>
+
+      <div className="overview-grid">
+        <div className="panel trend-panel">
+          <PanelHeader icon={BarChart3} label={`${chartPoints.length} score points`} title="Recommendation Readiness" />
+          <ReadinessChart points={chartPoints} />
+        </div>
+
+        <div className="panel attention-panel">
+          <PanelHeader icon={AlertTriangle} label="Review queue" title="Attention" />
+          <div className="attention-list">
+            {attentionRows(data).map((item) => (
+              <button key={item.label} className="attention-row" onClick={() => setView(item.view)}>
+                <span className={`attention-dot ${item.tone}`} />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.detail}</small>
+                </span>
+                <em>{item.action}</em>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel top-actions-panel">
+          <PanelHeader icon={SlidersHorizontal} label={`${topActions.length} highest priority`} title="Top Actions" />
+          <div className="overview-table" aria-label="Top GeoOptimizer actions">
+            <div className="overview-table-head">
+              <span>Score</span>
+              <span>Action</span>
+              <span>Surface</span>
+              <span>State</span>
+            </div>
+            {topActions.map((rec) => (
+              <button
+                key={rec.proposal_id}
+                className={rec.proposal_id === selectedAction?.proposal_id ? "overview-action-row selected" : "overview-action-row"}
+                onClick={() => openRecommendation(rec.proposal_id)}
+              >
+                <strong>{rec.combined_score}</strong>
+                <span>{rec.title}</span>
+                <span>{rec.surface || "Audit"}</span>
+                <span>{rec.evidence_tier || "Review"}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel coverage-panel">
+          <PanelHeader icon={Layers3} label="Current run" title="Coverage" />
+          <CoverageRows rows={coverageRows(data)} />
+        </div>
+      </div>
+
+      <div className="publish-handoff">
+        <div>
+          <h3>Publish Handoff</h3>
+          <p>Choose an export format for stakeholders.</p>
+        </div>
+        {[
+          ["clipboard", Clipboard, "Clipboard", "Copy summary"],
+          ["csv", Table2, "CSV", "For analysis"],
+          ["json", FileJson, "JSON", "For systems"],
+          ["audit", FileText, "Full audit", "Complete package"]
+        ].map(([type, Icon, title, subtitle]) => (
+          <button key={type} className="handoff-tile" onClick={() => setView("exports")}>
+            <Icon size={18} />
+            <span><strong>{title}</strong><small>{subtitle}</small></span>
+          </button>
+        ))}
+      </div>
+
+      {runs.length > 1 && (
+        <p className="overview-footnote">
+          {runs.length} run records available. Switch runs from the header to compare snapshots.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function PriorityBars({ rows }) {
+  return (
+    <div className="priority-bars">
+      {rows.map((row) => (
+        <div className="priority-row" key={row.label}>
+          <span>{row.label}</span>
+          <div className="priority-track">
+            <i style={{ width: `${row.value}%`, background: row.color }} />
+          </div>
+          <em>{row.state}</em>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReadinessChart({ points }) {
+  const width = 680;
+  const height = 210;
+  const plot = points.map((point, index) => {
+    const x = 28 + (index * (width - 56)) / Math.max(points.length - 1, 1);
+    const y = height - 34 - (clamp(point.value, 0, 100) * (height - 70)) / 100;
+    return { ...point, x, y };
+  });
+  const line = plot.map((point) => `${point.x},${point.y}`).join(" ");
+  return (
+    <div className="readiness-chart">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Recommendation readiness profile">
+        <line x1="28" y1={height - 34} x2={width - 28} y2={height - 34} />
+        <polyline points={line} />
+        {plot.map((point) => (
+          <g key={point.label}>
+            <circle cx={point.x} cy={point.y} r="4" />
+            <text x={point.x} y={height - 10}>{point.label}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function CoverageRows({ rows }) {
+  return (
+    <div className="coverage-list">
+      {rows.map((row) => (
+        <div className="coverage-row" key={row.label}>
+          <span>{row.label}</span>
+          <strong>{row.value}</strong>
+          <div><i style={{ width: `${row.percent}%` }} /></div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1034,6 +1219,102 @@ function EvidenceTag({ tier }) {
 function SelectorTag({ status }) {
   const warning = String(status || "").toLowerCase().includes("warning");
   return <span className={warning ? "tag warn" : "tag"}>{status || "No selector"}</span>;
+}
+
+function getOverviewMetrics(data) {
+  const recommendations = data?.recommendations || [];
+  const summary = data?.summary || {};
+  const warnings = summary.selector_warnings ?? recommendations.filter((rec) => String(rec.selector_status || "").toLowerCase().includes("warning")).length;
+  const errors = data?.run?.validation_errors?.length || 0;
+  const averageScore = recommendations.length
+    ? recommendations.reduce((total, rec) => total + Number(rec.combined_score || 0), 0) / recommendations.length
+    : 0;
+  const readiness = Math.round(clamp(averageScore - warnings * 0.8 - errors * 4, 0, 99));
+  return {
+    readiness,
+    recommendations: summary.recommendations ?? recommendations.length,
+    ready: summary.implementation_ready ?? recommendations.filter((rec) => rec.evidence_tier === "Implementation-ready").length,
+    sources: summary.sources ?? data?.sources?.length ?? 0,
+    warnings,
+    errors
+  };
+}
+
+function priorityRows(data) {
+  const recommendations = data?.recommendations || [];
+  const values = recommendations.map((rec) => rec.priority_components || {});
+  const risk = Math.min(100, ((data?.summary?.selector_warnings || 0) * 9) + ((data?.run?.validation_errors?.length || 0) * 22));
+  return [
+    { label: "Impact", value: componentPercent(values, "business_impact"), state: "High", color: "#9f1239" },
+    { label: "Evidence", value: componentPercent(values, "evidence_strength"), state: "High", color: "#0f5362" },
+    { label: "Ease", value: componentPercent(values, "ease_of_implementation"), state: "Medium", color: "#4b8378" },
+    { label: "Risk", value: risk, state: risk > 55 ? "High" : risk > 28 ? "Medium" : "Low", color: "#b76b17" }
+  ];
+}
+
+function componentPercent(values, key) {
+  const usable = values.map((value) => Number(value[key] || 0)).filter(Boolean);
+  if (!usable.length) return 0;
+  return Math.round((usable.reduce((total, value) => total + value, 0) / usable.length / 5) * 100);
+}
+
+function readinessSeries(recommendations) {
+  const scores = topRecommendations(recommendations, 5).map((rec) => Number(rec.combined_score || 0));
+  if (!scores.length) return [{ label: "No data", value: 0 }];
+  return scores.map((score, index) => ({ label: `P${index + 1}`, value: score }));
+}
+
+function attentionRows(data) {
+  const summary = data?.summary || {};
+  const errors = data?.run?.validation_errors?.length || 0;
+  return [
+    {
+      label: `${summary.selector_warnings || 0} selector warnings`,
+      detail: "Require selector review",
+      action: "Review",
+      tone: "warn",
+      view: "recommendations"
+    },
+    {
+      label: `${errors} validation errors`,
+      detail: errors ? "Block implementation" : "Validation clear",
+      action: errors ? "Resolve" : "Clear",
+      tone: errors ? "danger" : "ok",
+      view: "exports"
+    },
+    {
+      label: `${summary.metadata_changes || 0} metadata updates`,
+      detail: "Ready for export review",
+      action: "Address",
+      tone: "info",
+      view: "metadata"
+    }
+  ];
+}
+
+function coverageRows(data) {
+  const recommendations = data?.recommendations || [];
+  const summary = data?.summary || {};
+  const schemaCount = recommendations.filter((rec) => /schema|structured/i.test(`${rec.title} ${rec.surface}`)).length;
+  const rows = [
+    ["Pages", summary.pages ?? data?.radisson_pages?.length ?? 0],
+    ["Metadata", summary.metadata_changes ?? data?.metadata_changes?.length ?? 0],
+    ["Schema", schemaCount],
+    ["Copy", summary.copy_blocks ?? data?.copy_blocks?.length ?? 0],
+    ["Evidence", summary.implementation_ready ?? recommendations.filter((rec) => rec.evidence_tier === "Implementation-ready").length]
+  ];
+  const max = Math.max(...rows.map(([, value]) => Number(value) || 0), 1);
+  return rows.map(([label, value]) => ({ label, value, percent: Math.max(8, Math.round((Number(value) / max) * 100)) }));
+}
+
+function topRecommendations(recommendations, count) {
+  return [...recommendations]
+    .sort((a, b) => Number(b.combined_score || 0) - Number(a.combined_score || 0))
+    .slice(0, count);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function buildLookups(data) {
