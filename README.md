@@ -23,22 +23,50 @@ Claude Code should execute the full pipeline defined in `CLAUDE.md`: literature 
 
 A local operator dashboard is available in `dashboard/`. It wraps the existing `run.py` workflow, displays run status and artifacts, summarizes historical gaps/proposals, and lets you edit `sources/website/target_urls.md`.
 
-Start the API server:
+### Option 1: Running from the repository root (Recommended)
 
-```bash
-cd dashboard
-npm install
-npm run backend
-```
+You can run the dashboard directly from the root of the repository without changing directories.
 
-Start the frontend in a second terminal:
+1. **Install frontend dependencies** (first time only):
+   ```bash
+   npm --prefix dashboard install
+   ```
 
-```bash
-cd dashboard
-npm run dev
-```
+2. **Start the API backend**:
+   ```bash
+   python dashboard/server.py
+   ```
+   *(Alternatively: `npm --prefix dashboard run backend`)*
 
-Then open `http://127.0.0.1:5173`.
+3. **Start the frontend** in a second terminal:
+   ```bash
+   npm --prefix dashboard run dev
+   ```
+
+4. **Access the dashboard**:
+   Open [http://127.0.0.1:5173](http://127.0.0.1:5173) in your browser.
+
+### Option 2: Running from the `dashboard/` directory
+
+1. **Navigate and install dependencies** (first time only):
+   ```bash
+   cd dashboard
+   npm install
+   ```
+
+2. **Start the API backend**:
+   ```bash
+   npm run backend
+   ```
+
+3. **Start the frontend** in a second terminal:
+   ```bash
+   npm run dev
+   ```
+
+4. **Access the dashboard**:
+   Open [http://127.0.0.1:5173](http://127.0.0.1:5173) in your browser.
+
 
 
 **IMPORTANT**

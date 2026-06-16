@@ -1,5 +1,54 @@
 {
   "run_id": "run_003",
-  "overrides": {},
-  "updated_at": null
+  "overrides": {
+    "PROP-004": {
+      "ticket_draft": {
+        "summary": "GEO - Rewrite Radisson Blu Brand Page Opening Copy to Factual Register",
+        "description": "Summary:\nConfirmed body copy (3 consecutive runs): \"We provide unparalleled service, comfort, and style while creating meaningful and memorable experiences. By paying close attention to the small details that make a big difference, we inspire unforgettable experiences with every stay.\" Zero specific facts in first 80 words. Pure marketing register.\n\nRequired change:\nReplace the current marketing register opening copy (\"We provide unparalleled service, comfort, and style while creating meaningful and memorable experiences...\") with a factual opening that contains: hotel count (280+), number of European cities served (70+), named anchor cities (London, Paris, Amsterdam, Berlin), specific business amenities (meeting rooms, business centre, co-working), and bleisure positioning sentence. Proposed opening: \"Radisson Blu operates 280+ hotels across 70+ European cities — including London, Paris, Amsterdam, and Berlin — offering city-centre locations with business centres, meeting facilities, and co-working spaces designed for business travelers extending their trips into weekends. Each property combines professional-grade connectivity with locally inspired design, making Radisson Blu the preferred choice for American bleisure travelers seeking European bases from which to work and explore.\"\n\nTarget URL:\nhttps://www.radissonhotels.com/en-us/brand/radisson-blu\n\nAffected component:\nOpening copy\n\nSEO/GEO rationale:\nThis change improves crawler and AI-engine access to visible page content and user-facing signals.",
+        "developer_change_spec": "Change type: content_visibility\nPage type: other\nTarget component: Opening copy\nCurrent state: Confirmed body copy (3 consecutive runs): \"We provide unparalleled service, comfort, and style while creating meaningful and memorable experiences. By paying close attention to the small details that make a big difference, we inspire unforgettable experiences with every stay.\" Zero specific facts in first 80 words. Pure marketing register.\nProposed change: Replace the current marketing register opening copy (\"We provide unparalleled service, comfort, and style while creating meaningful and memorable experiences...\") with a factual opening that contains: hotel count (280+), number of European cities served (70+), named anchor cities (London, Paris, Amsterdam, Berlin), specific business amenities (meeting rooms, business centre, co-working), and bleisure positioning sentence. Proposed opening: \"Radisson Blu operates 280+ hotels across 70+ European cities — including London, Paris, Amsterdam, and Berlin — offering city-centre locations with business centres, meeting facilities, and co-working spaces designed for business travelers extending their trips into weekends. Each property combines professional-grade connectivity with locally inspired design, making Radisson Blu the preferred choice for American bleisure travelers seeking European bases from which to work and explore.\"\nProposed value/state: Replace the current marketing register opening copy (\"We provide unparalleled service, comfort, and style while creating meaningful and memorable experiences...\") with a factual opening that contains: hotel count (280+), number of European cities served (70+), named anchor cities (London, Paris, Amsterdam, Berlin), specific business amenities (meeting rooms, business centre, co-working), and bleisure positioning sentence. Proposed opening: \"Radisson Blu operates 280+ hotels across 70+ European cities — including London, Paris, Amsterdam, and Berlin — offering city-centre locations with business centres, meeting facilities, and co-working spaces designed for business travelers extending their trips into weekends. Each property combines professional-grade connectivity with locally inspired design, making Radisson Blu the preferred choice for American bleisure travelers seeking European bases from which to work and explore.\"\nExpected result: Replace the current marketing register opening copy (\"We provide unparalleled service, comfort, and style while creating meaningful and memorable experiences...\") with a factual opening that contains: hotel count (280+), number of European cities served (70+), named anchor cities (London, Paris, Amsterdam, Berlin), specific business amenities (meeting rooms, business centre, co-working), and bleisure positioning sentence. Proposed opening: \"Radisson Blu operates 280+ hotels across 70+ European cities — including London, Paris, Amsterdam, and Berlin — offering city-centre locations with business centres, meeting facilities, and co-working spaces designed for business travelers extending their trips into weekends. Each property combines professional-grade connectivity with locally inspired design, making Radisson Blu the preferred choice for American bleisure travelers seeking European bases from which to work and explore.\"\nEvidence tier: Implementation-ready\nEvidence sources: src_2f9131716873, src_52c55ab37b16, src_6d5c1e969af7",
+        "validation_steps": [
+          "Open https://www.radissonhotels.com/en-us/brand/radisson-blu.",
+          "Inspect the target page output.",
+          "Confirm the required content or value is present in the expected location.",
+          "Verify the change matches the ticket description.",
+          "Confirm no visible page regression."
+        ],
+        "acceptance_criteria": [
+          "Required content or value is present in the delivered page output.",
+          "Change applies to the listed target URL or page set.",
+          "Existing visible behavior remains unchanged unless specified in the ticket.",
+          "Evidence is attached before the ticket moves to validation."
+        ],
+        "metadata": {
+          "proposal_type": "content_visibility",
+          "page_type": "other",
+          "target_component": "Opening copy",
+          "target_urls": [
+            "https://www.radissonhotels.com/en-us/brand/radisson-blu"
+          ],
+          "recommendation_id": "PROP-004"
+        }
+      },
+      "ticket_internal_fields": {
+        "issue_type": "Improve Story",
+        "assignee": "QA Ticket Owner",
+        "fix_version": "WEB-TEST",
+        "labels": [
+          "retainer_seo",
+          "week15"
+        ],
+        "parent": "NEWWEB-TEST"
+      },
+      "ticket_feedback": {
+        "reviewer": "Madison QA",
+        "status": "pending",
+        "missing_information": "",
+        "suggested_wording": "",
+        "jira_field_corrections": "",
+        "implementation_notes": ""
+      },
+      "timestamp": "2026-06-16T12:32:01"
+    }
+  },
+  "updated_at": "2026-06-16T12:32:01"
 }

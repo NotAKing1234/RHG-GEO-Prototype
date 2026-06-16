@@ -614,6 +614,8 @@ function RecommendationDetail({ recommendation, data, lookups, saveOverride, bus
         <CompareBlock before={recommendation.before_after?.before || recommendation.current_state} after={recommendation.before_after?.after || recommendation.proposed_change} />
       </div>
 
+      <TicketDraftingPanel recommendation={recommendation} copyBlocks={copyBlocks} saveOverride={saveOverride} busy={busy} />
+
       <OverrideEditor recommendation={recommendation} copyBlocks={copyBlocks} saveOverride={saveOverride} busy={busy} />
 
       <div className="panel">
@@ -635,6 +637,276 @@ function RecommendationDetail({ recommendation, data, lookups, saveOverride, bus
 
       <DiagramPanel title="Evidence Chain" diagram={recommendation.diagram} />
     </aside>
+  );
+}
+
+function TicketDraftingPanel({ recommendation, copyBlocks, saveOverride, busy }) {
+  const defaults = useMemo(() => buildTicketDraftDefaults(recommendation, copyBlocks), [recommendation, copyBlocks]);
+  const existingDraft = recommendation.team_override?.ticket_draft || {};
+  const existingFields = recommendation.team_override?.ticket_internal_fields || {};
+  const existingFeedback = recommendation.team_override?.ticket_feedback || {};
+
+  const [summary, setSummary] = useState(defaults.summary);
+  const [description, setDescription] = useState(defaults.description);
+  const [developerChangeSpec, setDeveloperChangeSpec] = useState(defaults.developerChangeSpec);
+  const [validationStepsText, setValidationStepsText] = useState(numberedListText(defaults.validationSteps));
+  const [acceptanceCriteriaText, setAcceptanceCriteriaText] = useState(numberedListText(defaults.acceptanceCriteria));
+  const [assignee, setAssignee] = useState(existingFields.assignee || "");
+  const [fixVersion, setFixVersion] = useState(existingFields.fix_version || "");
+  const [labels, setLabels] = useState(Array.isArray(existingFields.labels) ? existingFields.labels.join(", ") : "");
+  const [parent, setParent] = useState(existingFields.parent || "");
+  const [reviewer, setReviewer] = useState(existingFeedback.reviewer || "");
+  const [feedbackStatus, setFeedbackStatus] = useState(existingFeedback.status || "pending");
+  const [missingInformation, setMissingInformation] = useState(existingFeedback.missing_information || "");
+  const [suggestedWording, setSuggestedWording] = useState(existingFeedback.suggested_wording || "");
+  const [jiraFieldCorrections, setJiraFieldCorrections] = useState(existingFeedback.jira_field_corrections || "");
+  const [implementationNotes, setImplementationNotes] = useState(existingFeedback.implementation_notes || "");
+
+  useEffect(() => {
+    setSummary(existingDraft.summary || defaults.summary);
+    setDescription(existingDraft.description || defaults.description);
+    setDeveloperChangeSpec(existingDraft.developer_change_spec || defaults.developerChangeSpec);
+    setValidationStepsText(numberedListText(existingDraft.validation_steps || defaults.validationSteps));
+    setAcceptanceCriteriaText(numberedListText(existingDraft.acceptance_criteria || defaults.acceptanceCriteria));
+    setAssignee(existingFields.assignee || "");
+    setFixVersion(existingFields.fix_version || "");
+    setLabels(Array.isArray(existingFields.labels) ? existingFields.labels.join(", ") : "");
+    setParent(existingFields.parent || "");
+    setReviewer(existingFeedback.reviewer || "");
+    setFeedbackStatus(existingFeedback.status || "pending");
+    setMissingInformation(existingFeedback.missing_information || "");
+    setSuggestedWording(existingFeedback.suggested_wording || "");
+    setJiraFieldCorrections(existingFeedback.jira_field_corrections || "");
+    setImplementationNotes(existingFeedback.implementation_notes || "");
+  }, [
+    recommendation.proposal_id,
+    recommendation.team_override?.timestamp,
+    defaults.summary,
+    defaults.description,
+    defaults.developerChangeSpec,
+    defaults.validationSteps,
+    defaults.acceptanceCriteria,
+    existingDraft.summary,
+    existingDraft.description,
+    existingDraft.developer_change_spec,
+    existingDraft.validation_steps,
+    existingDraft.acceptance_criteria,
+    existingFields.assignee,
+    existingFields.fix_version,
+    existingFields.labels,
+    existingFields.parent,
+    existingFeedback.reviewer,
+    existingFeedback.status,
+    existingFeedback.missing_information,
+    existingFeedback.suggested_wording,
+    existingFeedback.jira_field_corrections,
+    existingFeedback.implementation_notes
+  ]);
+
+  const missingCoreFields = [];
+  if (!defaults.targetUrls.length) missingCoreFields.push("[NEEDED: target URL]");
+  if (!defaults.targetComponent) missingCoreFields.push("[NEEDED: target component]");
+  if (!recommendation.current_state) missingCoreFields.push("[NEEDED: current state]");
+  if (!recommendation.proposed_change) missingCoreFields.push("[NEEDED: recommended change]");
+
+  const missingRoutingFields = [];
+  if (!assignee.trim()) missingRoutingFields.push("[NEEDED: assignee]");
+  if (!fixVersion.trim()) missingRoutingFields.push("[NEEDED: fix version]");
+  if (!splitCommaValues(labels).length) missingRoutingFields.push("[NEEDED: labels]");
+  if (!parent.trim()) missingRoutingFields.push("[NEEDED: parent issue]");
+  if (!reviewer.trim()) missingRoutingFields.push("[NEEDED: Radisson feedback contact]");
+
+  const readiness = missingCoreFields.length ? "blocked" : missingRoutingFields.length ? "draft" : "developer_ready";
+  const missingFields = [...missingCoreFields, ...missingRoutingFields];
+  const fullTicket = buildFullTicket({
+    summary,
+    description,
+    developerChangeSpec,
+    validationStepsText,
+    acceptanceCriteriaText,
+    assignee,
+    fixVersion,
+    labels,
+    parent
+  });
+
+  function saveDraft() {
+    saveOverride(recommendation.proposal_id, {
+      ticket_draft: {
+        summary,
+        description,
+        developer_change_spec: developerChangeSpec,
+        validation_steps: numberedTextToList(validationStepsText),
+        acceptance_criteria: numberedTextToList(acceptanceCriteriaText),
+        metadata: {
+          proposal_type: defaults.proposalType,
+          page_type: defaults.pageType,
+          target_component: defaults.targetComponent,
+          target_urls: defaults.targetUrls,
+          recommendation_id: recommendation.proposal_id
+        }
+      },
+      ticket_internal_fields: {
+        issue_type: "Improve Story",
+        assignee: assignee.trim(),
+        fix_version: fixVersion.trim(),
+        labels: splitCommaValues(labels),
+        parent: parent.trim()
+      },
+      ticket_feedback: {
+        reviewer: reviewer.trim(),
+        status: feedbackStatus,
+        missing_information: missingInformation.trim(),
+        suggested_wording: suggestedWording.trim(),
+        jira_field_corrections: jiraFieldCorrections.trim(),
+        implementation_notes: implementationNotes.trim()
+      }
+    });
+  }
+
+  return (
+    <div className="panel ticket-panel">
+      <PanelHeader icon={Clipboard} label="Dashboard module" title="Ticket Drafting" />
+
+      <div className="ticket-status-row">
+        <Tag ok={readiness === "developer_ready"} warn={readiness === "draft"} danger={readiness === "blocked"}>
+          {labelize(readiness)}
+        </Tag>
+        <Tag>Improve Story</Tag>
+        <Tag>{labelize(defaults.proposalType)}</Tag>
+      </div>
+
+      <div className="ticket-panel-section">
+        <span className="ticket-section-label">Recommendation Context</span>
+        <dl className="definition-list ticket-definition-list">
+          <div><dt>Recommendation ID</dt><dd>{recommendation.proposal_id}</dd></div>
+          <div><dt>Priority</dt><dd>{recommendation.priority_tier || recommendation.combined_score}</dd></div>
+          <div><dt>Page Type</dt><dd>{defaults.pageType}</dd></div>
+          <div><dt>Target Component</dt><dd>{defaults.targetComponent || "[NEEDED: target component]"}</dd></div>
+          <div><dt>Target URL</dt><dd>{defaults.targetUrls.join(", ") || "[NEEDED: target URL]"}</dd></div>
+          <div><dt>Evidence</dt><dd>{recommendation.evidence_tier} · {recommendation.evidence_source_ids?.length || 0} sources</dd></div>
+        </dl>
+      </div>
+
+      <div className="ticket-panel-section">
+        <span className="ticket-section-label">Ticket Readiness</span>
+        {missingFields.length ? (
+          <div className="ticket-missing-list">
+            {missingFields.map((item) => <span key={item} className="ticket-missing-item">{item}</span>)}
+          </div>
+        ) : (
+          <p className="empty-text">No blocking or routing gaps detected for this ticket draft.</p>
+        )}
+      </div>
+
+      <div className="ticket-panel-section">
+        <label className="field">
+          Jira summary
+          <textarea className="ticket-output ticket-output-compact" value={summary} onChange={(event) => setSummary(event.target.value)} />
+        </label>
+        <label className="field">
+          Jira description
+          <textarea className="ticket-output" value={description} onChange={(event) => setDescription(event.target.value)} />
+        </label>
+        <label className="field">
+          Developer change spec
+          <textarea className="ticket-output" value={developerChangeSpec} onChange={(event) => setDeveloperChangeSpec(event.target.value)} />
+        </label>
+        <label className="field">
+          Validation steps
+          <textarea className="ticket-output ticket-output-list" value={validationStepsText} onChange={(event) => setValidationStepsText(event.target.value)} />
+        </label>
+        <label className="field">
+          Acceptance criteria
+          <textarea className="ticket-output ticket-output-list" value={acceptanceCriteriaText} onChange={(event) => setAcceptanceCriteriaText(event.target.value)} />
+        </label>
+      </div>
+
+      <div className="ticket-panel-section">
+        <span className="ticket-section-label">Internal Jira Fields</span>
+        <div className="ticket-field-grid">
+          <label className="field">
+            Assignee
+            <input value={assignee} onChange={(event) => setAssignee(event.target.value)} placeholder="[NEEDED: assignee]" />
+          </label>
+          <label className="field">
+            Fix version
+            <input value={fixVersion} onChange={(event) => setFixVersion(event.target.value)} placeholder="[NEEDED: fix version]" />
+          </label>
+          <label className="field">
+            Labels
+            <input value={labels} onChange={(event) => setLabels(event.target.value)} placeholder="[NEEDED: labels]" />
+          </label>
+          <label className="field">
+            Parent issue
+            <input value={parent} onChange={(event) => setParent(event.target.value)} placeholder="[NEEDED: parent issue]" />
+          </label>
+        </div>
+      </div>
+
+      <div className="ticket-panel-section">
+        <span className="ticket-section-label">Radisson Feedback Capture</span>
+        <p className="ticket-feedback-note">
+          Review prompts: Is the ticket clear enough for development? Is any Jira field missing? Are the proposed change
+          and validation steps specific enough? Which routing rules should be automated?
+        </p>
+        <div className="ticket-field-grid">
+          <label className="field">
+            Reviewer
+            <input value={reviewer} onChange={(event) => setReviewer(event.target.value)} placeholder="[NEEDED: Radisson feedback contact]" />
+          </label>
+          <label className="field">
+            Feedback status
+            <select value={feedbackStatus} onChange={(event) => setFeedbackStatus(event.target.value)}>
+              <option value="pending">Pending</option>
+              <option value="accepted">Accepted</option>
+              <option value="needs_edit">Needs edit</option>
+              <option value="unclear">Unclear</option>
+            </select>
+          </label>
+        </div>
+        <label className="field">
+          Missing information
+          <textarea value={missingInformation} onChange={(event) => setMissingInformation(event.target.value)} placeholder="List required data gaps or clarifications from the Radisson team" />
+        </label>
+        <label className="field">
+          Suggested wording
+          <textarea value={suggestedWording} onChange={(event) => setSuggestedWording(event.target.value)} placeholder="Capture preferred Jira phrasing or copy edits" />
+        </label>
+        <label className="field">
+          Jira field corrections
+          <textarea value={jiraFieldCorrections} onChange={(event) => setJiraFieldCorrections(event.target.value)} placeholder="Assignee, label, parent, or fix version rules to automate later" />
+        </label>
+        <label className="field">
+          Implementation notes
+          <textarea value={implementationNotes} onChange={(event) => setImplementationNotes(event.target.value)} placeholder="Internal handoff notes or known technical constraints" />
+        </label>
+      </div>
+
+      <div className="button-row">
+        <button className="secondary-button" onClick={() => copyText(summary)}>
+          <Clipboard size={15} />
+          <span>Copy summary</span>
+        </button>
+        <button className="secondary-button" onClick={() => copyText(description)}>
+          <Clipboard size={15} />
+          <span>Copy description</span>
+        </button>
+        <button className="secondary-button" onClick={() => copyText(developerChangeSpec)}>
+          <Code2 size={15} />
+          <span>Copy spec</span>
+        </button>
+        <button className="secondary-button" onClick={() => copyText(fullTicket)}>
+          <FileText size={15} />
+          <span>Copy full ticket</span>
+        </button>
+      </div>
+
+      <button className="primary-button wide" onClick={saveDraft} disabled={busy === `override:${recommendation.proposal_id}`}>
+        {busy === `override:${recommendation.proposal_id}` ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+        <span>Save ticket draft</span>
+      </button>
+    </div>
   );
 }
 
@@ -1136,6 +1408,204 @@ function CompareBlock({ before, after }) {
       </div>
     </div>
   );
+}
+
+function buildTicketDraftDefaults(recommendation, copyBlocks) {
+  const proposalType = inferProposalType(recommendation, copyBlocks);
+  const targetUrls = unique((recommendation.page_refs || []).filter((ref) => String(ref || "").startsWith("http")));
+  const targetComponent = inferTargetComponent(recommendation);
+  const pageType = inferPageType(recommendation, targetUrls);
+  const proposedValue = inferProposedValue(recommendation, copyBlocks);
+  const validationSteps = buildValidationSteps(proposalType, targetUrls[0]);
+  const acceptanceCriteria = buildAcceptanceCriteria(proposalType);
+  const summaryBase = recommendation.title || `${targetComponent} ${recommendation.proposed_change || "update"}`;
+  const summary = summaryBase.startsWith("GEO -") ? summaryBase : `GEO - ${summaryBase}`;
+  const description = [
+    "Summary:",
+    recommendation.current_state || "[NEEDED: current state]",
+    "",
+    "Required change:",
+    recommendation.proposed_change || "[NEEDED: recommended change]",
+    "",
+    "Target URL:",
+    targetUrls.join("\n") || "[NEEDED: target URL]",
+    "",
+    "Affected component:",
+    targetComponent || "[NEEDED: target component]",
+    "",
+    "SEO/GEO rationale:",
+    buildSeoRationale(proposalType)
+  ].join("\n");
+  const developerChangeSpec = [
+    `Change type: ${proposalType}`,
+    `Page type: ${pageType}`,
+    `Target component: ${targetComponent || "[NEEDED: target component]"}`,
+    `Current state: ${recommendation.current_state || "[NEEDED: current state]"}`,
+    `Proposed change: ${recommendation.proposed_change || "[NEEDED: recommended change]"}`,
+    `Proposed value/state: ${proposedValue || recommendation.proposed_change || "[NEEDED: proposed value]"}`,
+    `Expected result: ${recommendation.proposed_change || "[NEEDED: expected result]"}`,
+    `Evidence tier: ${recommendation.evidence_tier || "Not set"}`,
+    `Evidence sources: ${recommendation.evidence_source_ids?.join(", ") || "None linked"}`
+  ].join("\n");
+  return { summary, description, developerChangeSpec, validationSteps, acceptanceCriteria, proposalType, targetUrls, targetComponent, pageType };
+}
+
+function inferProposalType(recommendation, copyBlocks = []) {
+  const text = `${recommendation.title || ""} ${recommendation.proposed_change || ""} ${recommendation.section_label || ""} ${recommendation.surface || ""}`.toLowerCase();
+  const blockText = copyBlocks
+    .map((block) => `${block.target_field_or_section || ""} ${block.format_type || ""} ${block.copy_label || ""}`.toLowerCase())
+    .join(" ");
+
+  if (/\b(json-ld|schema|structured data|memberprogram|faqpage)\b/.test(blockText)) return "schema_update";
+  if (/\b(json-ld|schema|structured data|memberprogram|faqpage)\b/.test(text)) return "schema_update";
+  if (/(title|meta description|metadata|open graph|og:)/.test(text)) return "metadata_update";
+  if (/(javascript|html|visible|crawler|bot|rendered)/.test(text)) return "html_visibility";
+  return "content_visibility";
+}
+
+function inferTargetComponent(recommendation) {
+  if (recommendation.section_label && recommendation.section_label !== "Page section") return recommendation.section_label;
+  const text = `${recommendation.title || ""} ${recommendation.proposed_change || ""}`.toLowerCase();
+  if (text.includes("room")) return "Rooms";
+  if (text.includes("service")) return "Services";
+  if (text.includes("faq")) return "FAQ";
+  if (text.includes("title")) return "Page title";
+  if (text.includes("meta")) return "Metadata";
+  return recommendation.surface || "Page content";
+}
+
+function inferPageType(recommendation, targetUrls) {
+  const values = targetUrls.length ? targetUrls : recommendation.page_refs || [];
+  const joined = values.join(" ").toLowerCase();
+  if (joined.includes("/rooms")) return "rooms";
+  if (joined.includes("/services")) return "services";
+  if (joined.includes("/offers")) return "offers";
+  if (joined.includes("/hotel")) return "hotel_detail";
+  return "other";
+}
+
+function inferProposedValue(recommendation, copyBlocks) {
+  const schemaBlock = copyBlocks.find((block) => /json-ld|schema/i.test(`${block.format_type || ""} ${block.copy_label || ""}`));
+  if (schemaBlock?.export_value) return schemaBlock.export_value;
+  return recommendation.before_after?.after || recommendation.proposed_change || "";
+}
+
+function buildSeoRationale(proposalType) {
+  if (proposalType === "html_visibility") {
+    return "This change improves crawler and AI-engine access to content in delivered HTML without depending on client-side rendering.";
+  }
+  if (proposalType === "schema_update") {
+    return "This change improves structured data coverage and gives search and AI systems clearer machine-readable entity signals.";
+  }
+  if (proposalType === "metadata_update") {
+    return "This change improves machine-readable metadata quality for search surfaces and AI retrieval workflows.";
+  }
+  return "This change improves crawler and AI-engine access to visible page content and user-facing signals.";
+}
+
+function buildValidationSteps(proposalType, targetUrl) {
+  const url = targetUrl || "[NEEDED: target URL]";
+  if (proposalType === "html_visibility") {
+    return [
+      `Open ${url}.`,
+      "Disable JavaScript and reload the page.",
+      "Inspect the delivered HTML or page source.",
+      "Confirm the target content is present without a client-side dependency.",
+      "Confirm no visible page regression when JavaScript is enabled."
+    ];
+  }
+  if (proposalType === "schema_update") {
+    return [
+      `Open ${url}.`,
+      "Inspect the rendered JSON-LD or structured data output.",
+      "Confirm the required schema field or value is present.",
+      "Validate that the updated schema still parses correctly.",
+      "Confirm no visible page regression."
+    ];
+  }
+  if (proposalType === "metadata_update") {
+    return [
+      `Open ${url}.`,
+      "Inspect the page head metadata in the delivered HTML.",
+      "Confirm the updated metadata field contains the expected value.",
+      "Verify the value matches the ticket copy exactly.",
+      "Confirm no visible page regression."
+    ];
+  }
+  return [
+    `Open ${url}.`,
+    "Inspect the target page output.",
+    "Confirm the required content or value is present in the expected location.",
+    "Verify the change matches the ticket description.",
+    "Confirm no visible page regression."
+  ];
+}
+
+function buildAcceptanceCriteria(proposalType) {
+  const baseline = [
+    "Required content or value is present in the delivered page output.",
+    "Change applies to the listed target URL or page set.",
+    "Existing visible behavior remains unchanged unless specified in the ticket.",
+    "Evidence is attached before the ticket moves to validation."
+  ];
+  if (proposalType === "html_visibility") {
+    return [
+      "Target content is present in server-delivered HTML when JavaScript is disabled.",
+      ...baseline.slice(1)
+    ];
+  }
+  if (proposalType === "schema_update") {
+    return [
+      "Updated structured data field or object is present in the rendered output.",
+      ...baseline.slice(1)
+    ];
+  }
+  return baseline;
+}
+
+function numberedListText(items) {
+  return (items || []).map((item, index) => `${index + 1}. ${item}`).join("\n");
+}
+
+function numberedTextToList(text) {
+  return String(text || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^\d+\.\s*/, ""));
+}
+
+function splitCommaValues(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildFullTicket({ summary, description, developerChangeSpec, validationStepsText, acceptanceCriteriaText, assignee, fixVersion, labels, parent }) {
+  return [
+    "Jira Summary:",
+    summary || "[NEEDED: summary]",
+    "",
+    "Jira Description:",
+    description || "[NEEDED: description]",
+    "",
+    "Developer Change Spec:",
+    developerChangeSpec || "[NEEDED: developer change spec]",
+    "",
+    "Validation Steps:",
+    validationStepsText || "[NEEDED: validation steps]",
+    "",
+    "Acceptance Criteria:",
+    acceptanceCriteriaText || "[NEEDED: acceptance criteria]",
+    "",
+    "Internal Jira Fields:",
+    "Issue type: Improve Story",
+    `Assignee: ${assignee || "[NEEDED: assignee]"}`,
+    `Fix version: ${fixVersion || "[NEEDED: fix version]"}`,
+    `Labels: ${labels || "[NEEDED: labels]"}`,
+    `Parent: ${parent || "[NEEDED: parent issue]"}`
+  ].join("\n");
 }
 
 function DiagramPanel({ title, diagram }) {

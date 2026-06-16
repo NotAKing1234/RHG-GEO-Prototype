@@ -5,7 +5,7 @@
     "date": "2026-04-15",
     "run_dir": "runs/run_003_2026-04-15",
     "previous_run_id": "run_002",
-    "imported_at": "2026-06-16T11:42:06",
+    "imported_at": "2026-06-16T11:40:44",
     "source_files": {
       "metadata_snapshot": "runs/run_003_2026-04-15/metadata_snapshot.md",
       "context_brief": "runs/run_003_2026-04-15/context_brief.md",
