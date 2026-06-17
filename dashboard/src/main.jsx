@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import rhgCircleLogo from "./assets/rhg-circle-logo.svg";
 import {
   AlertTriangle,
   BarChart3,
@@ -13,6 +14,7 @@ import {
   FileJson,
   FileText,
   Globe2,
+  Info,
   Layers3,
   Loader2,
   Monitor,
@@ -45,6 +47,45 @@ const DEFAULT_FILTERS = {
   page: "all"
 };
 
+const CRAWL_BLOCKED_PATTERN = /\b403\b|blocked|access restricted|temporarily restricted/i;
+const SELECTOR_WARNING_HELP =
+  "The dashboard could not infer the exact page selector for this proposed change. Review the target page section or metadata field before sending the ticket.";
+const TAG_HELP_BY_LABEL = {
+  "front-end content": "This proposal affects visible page content or delivered HTML. Review the target page section and copy before sending it for implementation.",
+  "metadata / structured data": "This proposal affects metadata, schema, or another machine-readable field. It should be routed to the website or SEO implementation owner who manages page metadata.",
+  "strategic / infrastructure": "This proposal affects a broader technical or workflow capability rather than a single page field. It likely needs scoping before it can be sent as a direct implementation ticket.",
+  "ready to send": "This item has enough evidence and routing detail to move into stakeholder handoff. Still confirm any team-specific ownership or Jira fields before import.",
+  "need review": "This item needs a human check before sending. Usually the missing piece is a selector, target field, or implementation owner.",
+  "medium evidence": "This item is supported, but the evidence is not as strong as an implementation-ready recommendation. Review the linked sources before treating it as ready to send.",
+  "validation error": "This item has a validation issue in the dashboard data. Fix the underlying data before exporting it as a Jira ticket.",
+  "metadata field target": "The recommendation targets a metadata or structured data field rather than a visible page selector. Confirm the exact field name before sending the ticket.",
+  "warning: selector not inferred": SELECTOR_WARNING_HELP,
+  "team override selector": "A reviewer supplied or adjusted the selector manually. Use the override as the implementation target unless new page evidence contradicts it.",
+  "no selector": "No selector is attached to this item. Confirm the target page element or metadata field before sending it for implementation.",
+  "developer ready": "The ticket draft has enough implementation detail to hand off to a developer. Review acceptance criteria and validation steps before import.",
+  "draft": "The ticket is still being shaped. Fill missing target, ownership, or acceptance details before import.",
+  "blocked": "The ticket cannot be sent yet because a required implementation detail is missing or invalid. Resolve the blocker before exporting.",
+  "improve story": "This is a Jira Story for a specific GEO improvement. It should describe one implementable change with acceptance criteria.",
+  "schema update": "This proposal changes structured data or JSON-LD. Validate the updated schema after implementation.",
+  "metadata update": "This proposal changes page metadata such as title, description, Open Graph, or another head field. Confirm the value appears in delivered HTML.",
+  "html visibility": "This proposal improves whether crawlers and AI systems can read content in delivered HTML. Validate with JavaScript disabled or by inspecting page source.",
+  "content visibility": "This proposal changes visible content so the page communicates clearer entity or offering signals. Validate the live page and the ticket copy.",
+  "ai engine": "This source mentions AI engines or AI-search behavior. It is useful evidence for GEO visibility decisions.",
+  "schema": "This source or recommendation relates to structured data. Use it when validating schema and machine-readable signals.",
+  "traveler": "This source mentions traveler-facing needs or search behavior. Use it to connect GEO recommendations to user-facing demand.",
+  "current": "This metadata value is currently parsed without a warning. Compare it with the proposed value before copying it into a ticket.",
+  "success": "The capture or validation step completed successfully. Use the result as supporting evidence for the current item.",
+  "unknown": "The dashboard does not have a specific status for this item. Inspect the surrounding detail before relying on it.",
+  "capture": "This identifies how the page evidence was captured. Use it to judge whether the evidence came from a browser render or fallback fetch."
+};
+const SCORECARD_HELP_BY_KEY = {
+  source_count: "This counts how many times the source was referenced in the research material. Higher counts can indicate stronger supporting evidence.",
+  has_urls: "This shows whether the parsed source text includes explicit URLs that can be traced back to a page or cited destination. No means the source may still be useful, but it did not include a direct URL in the parsed excerpt.",
+  mentions_schema: "This shows whether the source mentions schema, JSON-LD, or structured data. Use it to judge whether the source supports metadata or machine-readable signal work.",
+  mentions_ai_engine: "This shows whether the source mentions AI engines, AI search, or LLM discovery behavior. Use it as evidence for GEO visibility decisions.",
+  mentions_traveler: "This shows whether the source mentions traveler-facing behavior, needs, or search intent. Use it to connect technical recommendations back to user demand."
+};
+
 const api = {
   get: async (path) => request(path),
   post: async (path, payload = {}) => request(path, { method: "POST", body: JSON.stringify(payload) }),
@@ -67,6 +108,7 @@ async function request(path, options = {}) {
 
 function App() {
   const [view, setView] = useState("overview");
+  const [preferredExportType, setPreferredExportType] = useState("clipboard");
   const [runs, setRuns] = useState([]);
   const [selectedRunId, setSelectedRunId] = usePersistentState("geo:selectedRunId", "");
   const [filters, setFilters] = usePersistentObject("geo:filters", DEFAULT_FILTERS);
@@ -179,7 +221,9 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">RG</div>
+          <button className="brand-mark" type="button" onClick={() => setView("overview")} aria-label="Go to overview">
+            <img src={rhgCircleLogo} alt="Radisson Hotel Group" />
+          </button>
           <div>
             <h1>GEOptimizer</h1>
             <p>Radisson audit dashboard</p>
@@ -259,9 +303,13 @@ function App() {
             {view === "overview" && (
               <OverviewView
                 data={data}
+                recommendations={recommendations}
+                filters={filters}
                 runs={runs}
                 setView={setView}
+                setPreferredExportType={setPreferredExportType}
                 setSelectedRecommendationId={setSelectedRecommendationId}
+                setSelectedPageUrl={setSelectedPageUrl}
               />
             )}
             {view === "recommendations" && (
@@ -285,6 +333,7 @@ function App() {
               <PagesView
                 data={data}
                 selectedPageUrl={selectedPageUrl}
+                selectedRecommendationId={selectedRecommendationId}
                 setSelectedPageUrl={setSelectedPageUrl}
                 setSelectedRecommendationId={setSelectedRecommendationId}
                 setView={setView}
@@ -304,7 +353,7 @@ function App() {
             )}
             {view === "metadata" && <MetadataView data={data} lookups={lookups} />}
             {view === "copy" && <CopyBankView data={data} saveOverride={saveOverride} busy={busy} />}
-            {view === "exports" && <ExportsView runId={selectedRunId} />}
+            {view === "exports" && <ExportsView runId={selectedRunId} preferredExportType={preferredExportType} />}
           </>
         )}
       </main>
@@ -313,26 +362,34 @@ function App() {
 }
 
 function SummaryBar({ data }) {
+  const metrics = getOverviewMetrics(data);
   const validationCount = data.run?.validation_errors?.length || 0;
   return (
     <section className="summary-grid">
-      <Metric label="Recommendations" value={data.summary?.recommendations || 0} />
-      <Metric label="Ready Evidence" value={data.summary?.implementation_ready || 0} />
-      <Metric label="Sources" value={data.summary?.sources || 0} />
-      <Metric label="Selector Warnings" value={data.summary?.selector_warnings || 0} danger={Boolean(data.summary?.selector_warnings)} />
+      <Metric label="Total recommendations" value={metrics.recommendations} />
+      <Metric label="Ready to send" value={metrics.ready} />
+      <Metric label="Need review" value={metrics.needsReview} danger={Boolean(metrics.needsReview)} />
+      <Metric label="Sources reviewed" value={metrics.sources} />
+      <Metric label="403 / restricted reads" value={metrics.crawl.blockedPages} danger={Boolean(metrics.crawl.blockedPages)} />
       <Metric label="Validation Errors" value={validationCount} danger={Boolean(validationCount)} />
     </section>
   );
 }
 
-function OverviewView({ data, runs, setView, setSelectedRecommendationId }) {
+function OverviewView({ data, recommendations, filters, runs, setView, setPreferredExportType, setSelectedRecommendationId, setSelectedPageUrl }) {
   const metrics = getOverviewMetrics(data);
-  const topActions = topRecommendations(data.recommendations || [], 5);
+  const topActions = topRecommendations(recommendations || [], 5);
   const selectedAction = topActions[0];
-  const chartPoints = readinessSeries(data.recommendations || []);
+  const activeSearch = filters.query.trim();
 
-  function openRecommendation(id) {
-    setSelectedRecommendationId(id);
+  function openRecommendation(rec) {
+    setSelectedRecommendationId(rec.proposal_id);
+    const pageUrl = linkedPageUrlForRecommendation(rec, data.radisson_pages || []);
+    if (pageUrl) {
+      setSelectedPageUrl(pageUrl);
+      setView("pages");
+      return;
+    }
     setView("recommendations");
   }
 
@@ -340,29 +397,40 @@ function OverviewView({ data, runs, setView, setSelectedRecommendationId }) {
     <section className="overview-shell">
       <div className="overview-hero">
         <div className="readiness-panel">
-          <span className="eyeline">GEO readiness</span>
+          <span className="eyeline">GEO visibility score</span>
           <strong>{metrics.readiness}</strong>
-          <p>Overall readiness for AI search visibility</p>
+          <p>Current GEO visibility score, plus prioritized improvements.</p>
+          <p className={metrics.crawl.blockedPages ? "readiness-note danger" : "readiness-note"}>
+            {readinessNotation(metrics)}
+          </p>
           <div className="readiness-facts">
-            <div><b>{metrics.recommendations}</b><span>Recommendations</span></div>
-            <div><b>{metrics.ready}</b><span>Implementation-ready</span></div>
-            <div><b>{metrics.sources}</b><span>Sources</span></div>
+            <div className="readiness-fact fact-total">
+              <b>{metrics.recommendations}</b>
+              <span>Total recommendations</span>
+            </div>
+            <div className="readiness-fact fact-ready">
+              <b>{metrics.ready}</b>
+              <span>Ready to send</span>
+            </div>
+            <div className="readiness-fact fact-review">
+              <b>{metrics.needsReview}</b>
+              <span>Need review</span>
+            </div>
+            <div className="readiness-fact fact-crawl">
+              <b>{metrics.crawl.blockedPages}</b>
+              <span>403 / restricted reads</span>
+            </div>
+            <div className="readiness-fact fact-sources">
+              <b>{metrics.sources}</b>
+              <span>Sources reviewed</span>
+            </div>
           </div>
-        </div>
-        <div className="priority-panel">
-          <PanelHeader icon={BarChart3} label="Priority" title="Action Profile" />
-          <PriorityBars rows={priorityRows(data)} />
         </div>
       </div>
 
       <div className="overview-grid">
-        <div className="panel trend-panel">
-          <PanelHeader icon={BarChart3} label={`${chartPoints.length} score points`} title="Recommendation Readiness" />
-          <ReadinessChart points={chartPoints} />
-        </div>
-
         <div className="panel attention-panel">
-          <PanelHeader icon={AlertTriangle} label="Review queue" title="Attention" />
+          <PanelHeader icon={AlertTriangle} label="Review queue" title="Needs Before Sending" />
           <div className="attention-list">
             {attentionRows(data).map((item) => (
               <button key={item.label} className="attention-row" onClick={() => setView(item.view)}>
@@ -378,7 +446,7 @@ function OverviewView({ data, runs, setView, setSelectedRecommendationId }) {
         </div>
 
         <div className="panel top-actions-panel">
-          <PanelHeader icon={SlidersHorizontal} label={`${topActions.length} highest priority`} title="Top Actions" />
+          <PanelHeader icon={SlidersHorizontal} label={activeSearch ? `${topActions.length} matching` : `${topActions.length} highest priority`} title="Top Actions" />
           <div className="overview-table" aria-label="Top GeoOptimizer actions">
             <div className="overview-table-head">
               <span>Score</span>
@@ -386,39 +454,48 @@ function OverviewView({ data, runs, setView, setSelectedRecommendationId }) {
               <span>Surface</span>
               <span>State</span>
             </div>
-            {topActions.map((rec) => (
-              <button
-                key={rec.proposal_id}
-                className={rec.proposal_id === selectedAction?.proposal_id ? "overview-action-row selected" : "overview-action-row"}
-                onClick={() => openRecommendation(rec.proposal_id)}
-              >
-                <strong>{rec.combined_score}</strong>
-                <span>{rec.title}</span>
-                <span>{rec.surface || "Audit"}</span>
-                <span>{rec.evidence_tier || "Review"}</span>
-              </button>
-            ))}
+            {topActions.length ? (
+              topActions.map((rec) => (
+                <button
+                  key={rec.proposal_id}
+                  className={rec.proposal_id === selectedAction?.proposal_id ? "overview-action-row selected" : "overview-action-row"}
+                  onClick={() => openRecommendation(rec)}
+                >
+                  <strong>{rec.combined_score}</strong>
+                  <span className="overview-action-title">{rec.title}</span>
+                  <span className="overview-action-surface">{rec.surface || "Audit"}</span>
+                  <span className="overview-action-state">{ticketStateLabel(rec)}</span>
+                </button>
+              ))
+            ) : (
+              <p className="empty-text overview-empty">No recommendations match "{activeSearch}".</p>
+            )}
           </div>
         </div>
 
-        <div className="panel coverage-panel">
-          <PanelHeader icon={Layers3} label="Current run" title="Coverage" />
-          <CoverageRows rows={coverageRows(data)} />
-        </div>
+        <CoveragePanel rows={coverageRows(data)} />
       </div>
 
       <div className="publish-handoff">
         <div>
           <h3>Publish Handoff</h3>
-          <p>Choose an export format for stakeholders.</p>
+          <p>Choose an export format for stakeholders, including a Jira-ready CSV structure.</p>
         </div>
         {[
+          ["jira_csv", Table2, "Jira CSV", "Stories per proposal"],
           ["clipboard", Clipboard, "Clipboard", "Copy summary"],
           ["csv", Table2, "CSV", "For analysis"],
           ["json", FileJson, "JSON", "For systems"],
           ["audit", FileText, "Full audit", "Complete package"]
         ].map(([type, Icon, title, subtitle]) => (
-          <button key={type} className="handoff-tile" onClick={() => setView("exports")}>
+          <button
+            key={type}
+            className="handoff-tile"
+            onClick={() => {
+              setPreferredExportType(type);
+              setView("exports");
+            }}
+          >
             <Icon size={18} />
             <span><strong>{title}</strong><small>{subtitle}</small></span>
           </button>
@@ -434,43 +511,53 @@ function OverviewView({ data, runs, setView, setSelectedRecommendationId }) {
   );
 }
 
-function PriorityBars({ rows }) {
-  return (
-    <div className="priority-bars">
-      {rows.map((row) => (
-        <div className="priority-row" key={row.label}>
-          <span>{row.label}</span>
-          <div className="priority-track">
-            <i style={{ width: `${row.value}%`, background: row.color }} />
-          </div>
-          <em>{row.state}</em>
-        </div>
-      ))}
-    </div>
-  );
-}
+const COVERAGE_DEFINITIONS = [
+  ["Pages", "Audited Radisson URLs included in the current run."],
+  ["Metadata", "Title, meta description, and related head fields reviewed or proposed for update."],
+  ["Schema", "Recommendations involving structured data, JSON-LD, or machine-readable entity signals."],
+  ["Copy", "Generated page, metadata, schema, and ticket-ready copy blocks available for handoff."],
+  ["Ready to send", "Proposal stories with enough evidence and review state to move into stakeholder handoff."]
+];
 
-function ReadinessChart({ points }) {
-  const width = 680;
-  const height = 210;
-  const plot = points.map((point, index) => {
-    const x = 28 + (index * (width - 56)) / Math.max(points.length - 1, 1);
-    const y = height - 34 - (clamp(point.value, 0, 100) * (height - 70)) / 100;
-    return { ...point, x, y };
-  });
-  const line = plot.map((point) => `${point.x},${point.y}`).join(" ");
+const EXPORT_FORMAT_NOTES = {
+  jira_csv: "Jira CSV uses Jira import fields: Issue Type, Epic Name, Summary, Description, Priority, Labels, Component, and Acceptance Criteria. It includes one Story per GEO proposal and describes both the GEO visibility score and the proposed improvements.",
+  clipboard: "Clipboard bundle creates a readable handoff summary for review or email. Use it when the recipient needs context, rationale, and next steps before importing anything into Jira.",
+  csv: "CSV exports the audit data in a general analysis format. Use it for spreadsheet review, filtering, QA checks, or comparing proposals outside Jira.",
+  json: "JSON exports the structured run data for systems and automation. Use it when another workflow needs machine-readable proposal, source, page, and validation fields.",
+  audit: "Full audit exports the complete run package in a readable text format. Use it for archival review, detailed stakeholder handoff, or re-checking how proposals were generated."
+};
+
+function CoveragePanel({ rows }) {
+  const [showInfo, setShowInfo] = useState(false);
   return (
-    <div className="readiness-chart">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Recommendation readiness profile">
-        <line x1="28" y1={height - 34} x2={width - 28} y2={height - 34} />
-        <polyline points={line} />
-        {plot.map((point) => (
-          <g key={point.label}>
-            <circle cx={point.x} cy={point.y} r="4" />
-            <text x={point.x} y={height - 10}>{point.label}</text>
-          </g>
-        ))}
-      </svg>
+    <div className="panel coverage-panel">
+      <div className="coverage-header-row">
+        <PanelHeader icon={Layers3} label="Current run" title="Coverage" />
+        <div className="coverage-info-wrap">
+          <button
+            className={showInfo ? "coverage-info-button active" : "coverage-info-button"}
+            aria-controls="coverage-info-panel"
+            aria-expanded={showInfo}
+            aria-label="Show coverage definitions"
+            onClick={() => setShowInfo((value) => !value)}
+            type="button"
+          >
+            <Info size={15} />
+          </button>
+          <span className="coverage-hover-tip">Coverage definitions</span>
+        </div>
+      </div>
+      {showInfo && (
+        <div className="coverage-info-popover" id="coverage-info-panel">
+          {COVERAGE_DEFINITIONS.map(([term, description]) => (
+            <div key={term}>
+              <strong>{term}</strong>
+              <span>{description}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <CoverageRows rows={rows} />
     </div>
   );
 }
@@ -566,7 +653,7 @@ function FilterBar({ data, filters, setFilters }) {
         Evidence
         <select value={filters.evidence} onChange={(event) => update("evidence", event.target.value)}>
           <option value="all">All evidence</option>
-          <option value="Implementation-ready">Implementation-ready</option>
+          <option value="Implementation-ready">Ready to send</option>
           <option value="Medium evidence">Medium evidence</option>
           <option value="Validation error">Validation error</option>
         </select>
@@ -979,7 +1066,7 @@ function OverrideEditor({ recommendation, copyBlocks, saveOverride, busy }) {
   );
 }
 
-function PagesView({ data, selectedPageUrl, setSelectedPageUrl, setSelectedRecommendationId, setView, capturePage, busy, lookups }) {
+function PagesView({ data, selectedPageUrl, selectedRecommendationId, setSelectedPageUrl, setSelectedRecommendationId, setView, capturePage, busy, lookups }) {
   const selectedPage = data.radisson_pages.find((page) => page.canonical_url === selectedPageUrl) || data.radisson_pages[0];
   const recs = (selectedPage?.recommendations || []).map((id) => lookups.recommendations.get(id)).filter(Boolean);
   return (
@@ -1044,7 +1131,7 @@ function PagesView({ data, selectedPageUrl, setSelectedPageUrl, setSelectedRecom
           <PanelHeader icon={SlidersHorizontal} label={`${recs.length} linked`} title="Recommendations For This Page" />
           <div className="compact-card-grid">
             {recs.map((rec) => (
-              <button key={rec.proposal_id} className="compact-card" onClick={() => {
+              <button key={rec.proposal_id} className={rec.proposal_id === selectedRecommendationId ? "compact-card active" : "compact-card"} onClick={() => {
                 setSelectedRecommendationId(rec.proposal_id);
                 setView("recommendations");
               }}>
@@ -1207,6 +1294,8 @@ function SourcesView({ data, selectedSourceId, setSelectedSourceId, setSelectedR
 
 function SourceCard({ source, index, selected, onSelect }) {
   const hasImage = Boolean(source.headerImage);
+  const mentionCount = source.scorecard?.source_count ?? 0;
+  const linkedTicketCount = (source.related_recommendations || []).length;
   return (
     <article className={selected ? "source-card selected" : "source-card"}>
       <button
@@ -1233,11 +1322,11 @@ function SourceCard({ source, index, selected, onSelect }) {
           </div>
           <p>{sourceSubheader(source)}</p>
           <div className="source-card-tags">
-            <Tag>{source.scorecard?.source_count ?? 0} refs</Tag>
+            <Tag>{pluralize(mentionCount, "research mention")}</Tag>
             {source.scorecard?.mentions_ai_engine && <Tag ok>AI engine</Tag>}
             {source.scorecard?.mentions_schema && <Tag>Schema</Tag>}
             {source.scorecard?.mentions_traveler && <Tag>Traveler</Tag>}
-            {(source.related_recommendations || []).length > 0 && <Tag>{source.related_recommendations.length} props</Tag>}
+            {linkedTicketCount > 0 && <Tag>{pluralize(linkedTicketCount, "linked ticket")}</Tag>}
           </div>
         </div>
       </button>
@@ -1349,35 +1438,57 @@ function CopyBlockCard({ block, recommendation, saveOverride, busy }) {
   );
 }
 
-function ExportsView({ runId }) {
-  const [exportType, setExportType] = useState("clipboard");
+function ExportsView({ runId, preferredExportType = "clipboard" }) {
+  const [exportType, setExportType] = useState(preferredExportType);
   const [content, setContent] = useState("");
   const [busy, setBusy] = useState("");
   async function loadExport(type = exportType) {
+    setExportType(type);
     setBusy(type);
     try {
       const payload = await api.get(`/api/dashboard/export?run_id=${encodeURIComponent(runId)}&type=${encodeURIComponent(type)}`);
       setContent(payload.content || "");
-      setExportType(type);
     } finally {
       setBusy("");
     }
   }
   useEffect(() => {
-    if (runId) loadExport("clipboard");
-  }, [runId]);
+    if (runId) loadExport(preferredExportType || "clipboard");
+  }, [runId, preferredExportType]);
+
+  function downloadExport() {
+    if (!content) return;
+    const blob = new Blob([content], { type: exportType.includes("csv") ? "text/csv;charset=utf-8" : "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = exportFileName(runId, exportType);
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="main-column">
       <div className="panel export-toolbar">
         <PanelHeader icon={Download} label="Handoff formats" title="Exports" />
+        <p className="export-note">{exportNoteForType(exportType)}</p>
         <div className="button-row">
           {[
+            ["jira_csv", Table2, "Jira CSV"],
             ["clipboard", Clipboard, "Clipboard bundle"],
             ["csv", Table2, "CSV"],
             ["json", FileJson, "JSON"],
             ["audit", FileText, "Full audit"]
           ].map(([type, Icon, label]) => (
-            <button key={type} className={exportType === type ? "secondary-button selected" : "secondary-button"} onClick={() => loadExport(type)} disabled={busy === type}>
+            <button
+              key={type}
+              className={exportType === type ? "secondary-button selected" : "secondary-button"}
+              data-export-type={type}
+              onClick={() => loadExport(type)}
+              disabled={busy === type}
+            >
               {busy === type ? <Loader2 className="spin" size={15} /> : <Icon size={15} />}
               <span>{label}</span>
             </button>
@@ -1386,6 +1497,10 @@ function ExportsView({ runId }) {
             <Clipboard size={15} />
             <span>Copy current export</span>
           </button>
+          <button className="secondary-button" onClick={downloadExport} disabled={!content}>
+            <Download size={15} />
+            <span>Download current export</span>
+          </button>
         </div>
       </div>
       <div className="panel">
@@ -1393,6 +1508,10 @@ function ExportsView({ runId }) {
       </div>
     </section>
   );
+}
+
+function exportNoteForType(type) {
+  return EXPORT_FORMAT_NOTES[type] || EXPORT_FORMAT_NOTES.clipboard;
 }
 
 function CompareBlock({ before, after }) {
@@ -1633,13 +1752,31 @@ function Scorecard({ scorecard }) {
   return (
     <div className="scorecard">
       {Object.entries(scorecard).map(([key, value]) => (
-        <div key={key}>
-          <span>{labelize(key)}</span>
+        <div className="scorecard-item" key={key}>
+          <span className="scorecard-label-row">
+            <span>{labelize(key)}</span>
+            <ScorecardHelp label={labelize(key)} text={scorecardHelp(key)} />
+          </span>
           <strong>{typeof value === "boolean" ? (value ? "Yes" : "No") : value}</strong>
         </div>
       ))}
     </div>
   );
+}
+
+function ScorecardHelp({ label, text }) {
+  return (
+    <span className="scorecard-help-wrap">
+      <span className="scorecard-help-button" tabIndex={0} title={text} aria-label={`${label}: ${text}`}>
+        <Info size={11} aria-hidden="true" />
+      </span>
+      <span className="scorecard-help-tooltip" aria-hidden="true">{text}</span>
+    </span>
+  );
+}
+
+function scorecardHelp(key) {
+  return SCORECARD_HELP_BY_KEY[key] || `This scorecard field summarizes ${labelize(key).toLowerCase()} for the selected source. Use it as quick context when judging source quality and relevance.`;
 }
 
 function KeyValueTable({ rows }) {
@@ -1676,71 +1813,154 @@ function PanelHeader({ icon: Icon, label, title }) {
   );
 }
 
-function Tag({ children, danger = false, warn = false, ok = false }) {
+function Tag({ children, danger = false, warn = false, ok = false, help = "" }) {
   const className = danger ? "tag danger" : warn ? "tag warn" : ok ? "tag ok" : "tag";
-  return <span className={className}>{children}</span>;
+  return <ExplainedTag className={className} help={help}>{children}</ExplainedTag>;
 }
 
 function EvidenceTag({ tier }) {
   const danger = tier === "Validation error";
-  return <span className={danger ? "tag danger" : tier === "Medium evidence" ? "tag warn" : "tag ok"}>{tier}</span>;
+  const label = tier === "Implementation-ready" ? "Ready to send" : tier || "Evidence not set";
+  return <Tag danger={danger} warn={tier === "Medium evidence"} ok={Boolean(tier && !danger && tier !== "Medium evidence")} help={tagHelp(label)}>{label}</Tag>;
+}
+
+function ticketStateLabel(rec) {
+  if (String(rec?.selector_status || "").toLowerCase().includes("warning")) return "Need review";
+  if (rec?.evidence_tier === "Implementation-ready") return "Ready to send";
+  return rec?.evidence_tier || "Review";
 }
 
 function SelectorTag({ status }) {
   const warning = String(status || "").toLowerCase().includes("warning");
-  return <span className={warning ? "tag warn" : "tag"}>{status || "No selector"}</span>;
+  const label = status || "No selector";
+  return <Tag warn={warning} help={warning ? SELECTOR_WARNING_HELP : tagHelp(label)}>{label}</Tag>;
+}
+
+function ExplainedTag({ children, className, help = "" }) {
+  const label = tagText(children);
+  const tooltip = help || tagHelp(label);
+  return (
+    <span className="tag-tooltip-wrap">
+      <span className={className} title={tooltip}>
+        {children}
+      </span>
+      <span className="tag-tooltip" aria-hidden="true">
+        {tooltip}
+      </span>
+    </span>
+  );
+}
+
+function tagText(value) {
+  if (Array.isArray(value)) return value.map(tagText).filter(Boolean).join(" ");
+  if (value === null || value === undefined || value === false) return "";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  return String(value);
+}
+
+function tagHelp(label) {
+  const text = String(label || "").trim();
+  const normalized = text.toLowerCase();
+  if (TAG_HELP_BY_LABEL[normalized]) return TAG_HELP_BY_LABEL[normalized];
+  if (/^warning:/.test(normalized)) return "This pill flags an issue that needs review before handoff. Open the recommendation detail to resolve the exact warning.";
+  if (/^\d+\s+criteria$/.test(normalized)) return "This shows how many evaluation criteria link to the selected source. More linked criteria means the source supports more of the audit framework.";
+  if (/^\d+\s+gaps$/.test(normalized)) return "This shows how many identified gaps link to the selected source. Use it to understand how broadly the source supports the gap analysis.";
+  if (/^\d+\s+recommendations$/.test(normalized)) return "This shows how many recommendations are connected to the selected source. Use it to trace which tickets rely on this evidence.";
+  if (/^\d+\s+research mentions?$/.test(normalized)) return "This shows how often the source was referenced in the research material. Higher counts can indicate stronger supporting evidence.";
+  if (/^\d+\s+linked tickets?$/.test(normalized)) return "This shows how many Jira-ready recommendations are connected to this source. Use it to trace evidence back to implementation tickets.";
+  if (normalized.includes("playwright")) return "This capture used the browser automation path. It is generally stronger evidence for rendered page behavior than a simple HTTP fetch.";
+  if (normalized.includes("fallback")) return "This capture used a fallback fetch path. Treat it as useful but confirm rendered page behavior when visual accuracy matters.";
+  return `This pill summarizes "${text || "this status"}" for the current item. Use it as quick context before deciding what to inspect, validate, or export.`;
 }
 
 function getOverviewMetrics(data) {
   const recommendations = data?.recommendations || [];
   const summary = data?.summary || {};
+  const crawl = getCrawlabilityMetrics(data);
   const warnings = summary.selector_warnings ?? recommendations.filter((rec) => String(rec.selector_status || "").toLowerCase().includes("warning")).length;
   const errors = data?.run?.validation_errors?.length || 0;
+  const implementationReady = summary.implementation_ready ?? recommendations.filter((rec) => rec.evidence_tier === "Implementation-ready").length;
+  const ready = Math.max(0, implementationReady - warnings);
   const averageScore = recommendations.length
     ? recommendations.reduce((total, rec) => total + Number(rec.combined_score || 0), 0) / recommendations.length
     : 0;
-  const readiness = Math.round(clamp(averageScore - warnings * 0.8 - errors * 4, 0, 99));
+  const reviewPenalty = warnings * 0.8;
+  const validationPenalty = errors * 4;
+  const uncappedReadiness = averageScore - reviewPenalty - validationPenalty - crawl.penalty;
+  const readiness = Math.round(clamp(Math.min(uncappedReadiness, crawl.cap), 0, 99));
   return {
     readiness,
+    averageScore: Math.round(averageScore),
+    reviewPenalty,
+    validationPenalty,
     recommendations: summary.recommendations ?? recommendations.length,
-    ready: summary.implementation_ready ?? recommendations.filter((rec) => rec.evidence_tier === "Implementation-ready").length,
+    ready,
+    needsReview: warnings,
     sources: summary.sources ?? data?.sources?.length ?? 0,
     warnings,
-    errors
+    errors,
+    crawl
   };
 }
 
-function priorityRows(data) {
-  const recommendations = data?.recommendations || [];
-  const values = recommendations.map((rec) => rec.priority_components || {});
-  const risk = Math.min(100, ((data?.summary?.selector_warnings || 0) * 9) + ((data?.run?.validation_errors?.length || 0) * 22));
-  return [
-    { label: "Impact", value: componentPercent(values, "business_impact"), state: "High", color: "#9f1239" },
-    { label: "Evidence", value: componentPercent(values, "evidence_strength"), state: "High", color: "#0f5362" },
-    { label: "Ease", value: componentPercent(values, "ease_of_implementation"), state: "Medium", color: "#4b8378" },
-    { label: "Risk", value: risk, state: risk > 55 ? "High" : risk > 28 ? "Medium" : "Low", color: "#b76b17" }
-  ];
+function getCrawlabilityMetrics(data) {
+  const pages = data?.radisson_pages || [];
+  const pageStatuses = pages.map((page) => {
+    const statusText = [
+      page?.metadata_snapshot?.fetch_status,
+      page?.metadata_snapshot?.raw_excerpt,
+      page?.live_capture_refs?.status,
+      page?.live_capture_refs?.metadata?.title,
+      page?.live_capture_refs?.sections?.[0]?.text
+    ].filter(Boolean).join(" ");
+    const checked = Boolean(page?.metadata_snapshot?.fetch_status || (page?.live_capture_refs?.status && page.live_capture_refs.status !== "not_captured"));
+    return {
+      checked,
+      blocked: checked && CRAWL_BLOCKED_PATTERN.test(statusText)
+    };
+  });
+  const checkedPages = pageStatuses.filter((item) => item.checked).length;
+  const blockedPages = pageStatuses.filter((item) => item.blocked).length;
+  const accessEvidence = [
+    ...(data?.recommendations || []).map((rec) => `${rec.title || ""} ${rec.current_state || ""} ${rec.proposed_change || ""}`),
+    ...(data?.metadata_changes || []).map((item) => `${item.current_value || ""} ${item.proposed_value || ""}`),
+    ...(data?.copy_blocks || []).map((item) => `${item.original_text || ""}`)
+  ].join(" ");
+  const robotsBlocked = /(robots\.txt.{0,160}(403|blocked|unreadable)|(403|blocked|unreadable).{0,160}robots\.txt)/i.test(accessEvidence);
+  const sitewideBlocked = (checkedPages >= 3 && blockedPages === checkedPages)
+    || /all WebFetch attempts.{0,180}(403|blocked)|WAF.{0,120}Block AI/i.test(accessEvidence);
+  const blockedRatio = checkedPages ? blockedPages / checkedPages : 0;
+  const pagePenalty = blockedPages ? 6 + Math.round(blockedRatio * 8) + Math.min(blockedPages, 4) : 0;
+  const penalty = Math.min(18, pagePenalty + (robotsBlocked ? 2 : 0) + (sitewideBlocked ? 2 : 0));
+  const cap = sitewideBlocked ? 72 : blockedPages ? 84 : 99;
+  return {
+    totalPages: pages.length,
+    checkedPages,
+    blockedPages,
+    robotsBlocked,
+    sitewideBlocked,
+    penalty,
+    cap
+  };
 }
 
-function componentPercent(values, key) {
-  const usable = values.map((value) => Number(value[key] || 0)).filter(Boolean);
-  if (!usable.length) return 0;
-  return Math.round((usable.reduce((total, value) => total + value, 0) / usable.length / 5) * 100);
-}
-
-function readinessSeries(recommendations) {
-  const scores = topRecommendations(recommendations, 5).map((rec) => Number(rec.combined_score || 0));
-  if (!scores.length) return [{ label: "No data", value: 0 }];
-  return scores.map((score, index) => ({ label: `P${index + 1}`, value: score }));
+function readinessNotation(metrics) {
+  if (metrics.crawl.blockedPages) {
+    const checkedPages = metrics.crawl.checkedPages || metrics.crawl.totalPages || metrics.crawl.blockedPages;
+    const scope = metrics.crawl.sitewideBlocked ? "Sitewide crawl block detected" : "Crawl block detected";
+    return `${scope}: ${metrics.crawl.blockedPages} of ${checkedPages} checked pages returned 403/restricted. Score includes -${metrics.crawl.penalty} crawlability penalty and caps at ${metrics.crawl.cap} until access is validated.`;
+  }
+  return "Score averages recommendation strength, then subtracts review, validation, and crawlability penalties.";
 }
 
 function attentionRows(data) {
+  const metrics = getOverviewMetrics(data);
   const summary = data?.summary || {};
   const errors = data?.run?.validation_errors?.length || 0;
   return [
     {
-      label: `${summary.selector_warnings || 0} selector warnings`,
-      detail: "Require selector review",
+      label: `${metrics.needsReview} need review`,
+      detail: "Confirm the exact page element or metadata field before these tickets can be sent.",
       action: "Review",
       tone: "warn",
       view: "recommendations"
@@ -1754,7 +1974,7 @@ function attentionRows(data) {
     },
     {
       label: `${summary.metadata_changes || 0} metadata updates`,
-      detail: "Ready for export review",
+      detail: "Ready for stakeholder review",
       action: "Address",
       tone: "info",
       view: "metadata"
@@ -1765,13 +1985,14 @@ function attentionRows(data) {
 function coverageRows(data) {
   const recommendations = data?.recommendations || [];
   const summary = data?.summary || {};
+  const metrics = getOverviewMetrics(data);
   const schemaCount = recommendations.filter((rec) => /schema|structured/i.test(`${rec.title} ${rec.surface}`)).length;
   const rows = [
     ["Pages", summary.pages ?? data?.radisson_pages?.length ?? 0],
     ["Metadata", summary.metadata_changes ?? data?.metadata_changes?.length ?? 0],
     ["Schema", schemaCount],
     ["Copy", summary.copy_blocks ?? data?.copy_blocks?.length ?? 0],
-    ["Evidence", summary.implementation_ready ?? recommendations.filter((rec) => rec.evidence_tier === "Implementation-ready").length]
+    ["Ready to send", metrics.ready]
   ];
   const max = Math.max(...rows.map(([, value]) => Number(value) || 0), 1);
   return rows.map(([label, value]) => ({ label, value, percent: Math.max(8, Math.round((Number(value) / max) * 100)) }));
@@ -1783,8 +2004,38 @@ function topRecommendations(recommendations, count) {
     .slice(0, count);
 }
 
+function linkedPageUrlForRecommendation(recommendation, pages) {
+  const refs = recommendation?.page_refs || [];
+  const exactRefs = new Set(refs);
+  const normalizedRefs = new Set(refs.map(normalizeUrlForMatch).filter(Boolean));
+  const directMatch = pages.find((page) => (
+    exactRefs.has(page.canonical_url)
+    || exactRefs.has(page.source_url)
+    || normalizedRefs.has(normalizeUrlForMatch(page.canonical_url))
+    || normalizedRefs.has(normalizeUrlForMatch(page.source_url))
+  ));
+  if (directMatch) return directMatch.canonical_url;
+  return pages.find((page) => (page.recommendations || []).includes(recommendation?.proposal_id))?.canonical_url || "";
+}
+
+function normalizeUrlForMatch(value) {
+  if (!value || !/^https?:\/\//i.test(value)) return "";
+  try {
+    const parsed = new URL(value);
+    parsed.hash = "";
+    parsed.search = "";
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return "";
+  }
+}
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function pluralize(count, singular) {
+  return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }
 
 function buildLookups(data) {
@@ -1879,6 +2130,11 @@ function labelize(value) {
 
 function shortUrl(value) {
   return String(value || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+}
+
+function exportFileName(runId, exportType) {
+  const extension = exportType.includes("csv") ? "csv" : exportType === "json" ? "json" : "txt";
+  return `${runId || "geo"}-${exportType}.${extension}`;
 }
 
 function copyText(value) {

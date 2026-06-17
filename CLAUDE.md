@@ -157,6 +157,29 @@ For every gap, write exactly one proposal entry in this order:
 4. **Inferred implementation status** - whether Radisson acted on a similar prior recommendation, or `N/A` on the first run
 5. **Directional impact estimate** - qualitative discovery effect
 6. **Priority tier** - `P1`, `P2`, or `P3`
+7. **Jira ticket fields** - a Jira-ready subsection that can convert to CSV
+
+The **Jira ticket fields** subsection is mandatory for every proposal on every GEO optimizer run. Use these Jira import fields exactly:
+
+- `Issue Type`
+- `Epic Name`
+- `Summary`
+- `Description`
+- `Priority`
+- `Labels`
+- `Component`
+- `Acceptance Criteria`
+
+Treat `Summary` as the ticket name/title for Jira import.
+
+Group the `Description` content under:
+
+- `Dev change specs`
+- `SEO/GEO rationale`
+- `GEO visibility score`
+- `Validation steps`
+
+Acceptance Criteria must be concrete, testable, and implementation-facing. If a value cannot be determined from run evidence, write a `[NEEDED: ...]` placeholder instead of guessing.
 
 Then run:
 

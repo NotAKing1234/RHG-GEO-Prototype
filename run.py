@@ -19,6 +19,7 @@ STATE_FILE = ROOT / "runs" / "active_run.json"
 RUN_INDEX = ROOT / "memory" / "run_index.md"
 IMPLEMENTATION_LOG = ROOT / "inferred" / "implementation_log.md"
 TARGET_URLS = ROOT / "sources" / "website" / "target_urls.md"
+RUN_TARGETS_CSV = ROOT / "sources" / "website" / "run_targets" / "next_geo_run.csv"
 
 PHASE_0 = "PHASE_0_LITERATURE_REFRESH"
 PHASE_1 = "PHASE_1_CONTEXT_BRIEF"
@@ -197,6 +198,26 @@ Write:
 
 Open with an executive summary and then write exactly one concrete proposal entry per gap: proposed change, source citation, current state, inferred implementation status, directional impact estimate, and priority tier.
 
+For every proposal entry, include a "Jira ticket fields" subsection that is ready to convert to the dashboard's Jira CSV. Use these Jira import fields exactly:
+- Issue Type
+- Epic Name
+- Summary
+- Description
+- Priority
+- Labels
+- Component
+- Acceptance Criteria
+
+Treat Summary as the ticket name/title for Jira import.
+
+Group the Description content under:
+- Dev change specs
+- SEO/GEO rationale
+- GEO visibility score
+- Validation steps
+
+Acceptance Criteria must be concrete, testable, and implementation-facing. If a value cannot be determined from the run evidence, include a [NEEDED: ...] placeholder instead of guessing. This Jira ticket subsection is mandatory for every proposal every time the GEO optimizer is run.
+
 When optimization_proposal.md exists, run:
 python run.py --next"""
         )
@@ -306,6 +327,12 @@ def run_subprocess(command: list[str]) -> None:
     subprocess.run(command, cwd=ROOT, check=True)
 
 
+def active_targets_path() -> Path:
+    if RUN_TARGETS_CSV.exists() and RUN_TARGETS_CSV.stat().st_size > 0:
+        return RUN_TARGETS_CSV
+    return TARGET_URLS
+
+
 def previous_snapshot_path(state: dict[str, Any]) -> Path | None:
     previous = state.get("previous_run_dir")
     if not previous:
@@ -317,11 +344,12 @@ def previous_snapshot_path(state: dict[str, Any]) -> Path | None:
 def run_scraper(state: dict[str, Any], skip_scrape: bool) -> dict[str, Any]:
     run_dir = ROOT / state["run_dir"]
     summary_path = run_dir / "scrape_summary.json"
+    targets_path = active_targets_path()
     command = [
         sys.executable,
         "scripts/scraper.py",
         "--targets",
-        rel(TARGET_URLS),
+        rel(targets_path),
         "--run-dir",
         state["run_dir"],
         "--run-id",

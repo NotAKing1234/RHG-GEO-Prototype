@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import logging
 import os
@@ -144,6 +145,8 @@ def parse_target_urls(filepath: str | Path) -> list[TargetURL]:
     path = repo_path(filepath)
     if not path.exists():
         raise FileNotFoundError(f"Target URL file not found: {path}")
+    if path.suffix.lower() == ".csv":
+        return parse_target_urls_csv(path)
 
     targets: list[TargetURL] = []
     seen: set[str] = set()
@@ -164,6 +167,44 @@ def parse_target_urls(filepath: str | Path) -> list[TargetURL]:
                     source_url=source_url,
                     canonical_url=canonical,
                     priority=priority,
+                    line_number=line_number,
+                )
+            )
+    return targets
+
+
+def parse_target_urls_csv(path: Path) -> list[TargetURL]:
+    targets: list[TargetURL] = []
+    seen: set[str] = set()
+    with path.open(encoding="utf-8", newline="") as fh:
+        reader = csv.DictReader(fh)
+        for line_number, row in enumerate(reader, start=2):
+            source_url = (
+                row.get("url")
+                or row.get("source_url")
+                or row.get("normalized_url")
+                or row.get("canonical_url")
+                or ""
+            ).strip()
+            if not source_url:
+                continue
+            canonical = canonicalize_url(source_url)
+            if canonical in seen:
+                logging.info("Skipping duplicate CSV target URL at line %s: %s", line_number, canonical)
+                continue
+            seen.add(canonical)
+            priority = (
+                row.get("priority")
+                or row.get("registry_priority")
+                or row.get("page_type")
+                or row.get("content_group")
+                or "CSV target"
+            )
+            targets.append(
+                TargetURL(
+                    source_url=source_url,
+                    canonical_url=canonical,
+                    priority=str(priority),
                     line_number=line_number,
                 )
             )

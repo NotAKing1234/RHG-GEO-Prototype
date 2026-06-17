@@ -70,7 +70,26 @@ You can run the dashboard directly from the root of the repository without chang
 
 
 **IMPORTANT**
-`sources/website/target_urls.md` contains all of the links that are researched. Please update this with all relevant links to ensure the suggestions are targeted for the appropriate sites! Current links are placeholders!
+`sources/website/target_urls.md` contains the canonical Radisson URL inventory researched by the optimizer. Refresh it from the crawl output when Radisson sitemap coverage changes.
+
+## Radisson crawl inventory
+
+A sitemap-derived Radisson URL inventory can be generated and validated with:
+
+```bash
+python scripts/radisson_crawl.py
+python scripts/ingest_radisson_crawl.py
+```
+
+The latest machine-readable crawl deliverables are written to `sources/website/radisson_crawl/latest/`, including `radisson_url_index.jsonl`, `radisson_url_index.csv`, `crawl_manifest.json`, `crawl_exclusions.csv`, and `geo_optimizer_ingestion.json`.
+
+To make the generated inventory the canonical optimizer target file, run:
+
+```bash
+python scripts/ingest_radisson_crawl.py --activate-targets
+```
+
+That command backs up the existing `sources/website/target_urls.md` before replacing it with all discovered Radisson target URLs.
 
 ## Folder structure
 

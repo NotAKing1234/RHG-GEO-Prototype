@@ -29,6 +29,8 @@ RUNS_ROOT = REPO_ROOT / "runs"
 STATE_FILE = RUNS_ROOT / "active_run.json"
 RUN_INDEX = REPO_ROOT / "memory" / "run_index.md"
 TARGET_URLS = REPO_ROOT / "sources" / "website" / "target_urls.md"
+URL_REGISTRY_CSV = REPO_ROOT / "sources" / "website" / "radisson_url_registry.csv"
+NEXT_GEO_RUN_CSV = REPO_ROOT / "sources" / "website" / "run_targets" / "next_geo_run.csv"
 
 ARTIFACT_NAMES = [
     "metadata_snapshot.md",
@@ -59,6 +61,32 @@ PHASE_LABELS = {
 }
 
 URL_RE = re.compile(r"https?://[^\s)<>\]\"']+")
+MODEL_PRICES_PER_MILLION = {
+    "gpt-5.4-mini": {"input": 0.75, "output": 4.50},
+    "gpt-5.4": {"input": 2.50, "output": 15.00},
+    "gpt-5.5": {"input": 5.00, "output": 30.00},
+    "gpt-5.3-codex": {"input": 1.75, "output": 14.00},
+}
+AUDIT_PROFILES = {
+    "metadata_light": {
+        "label": "Metadata light",
+        "input_tokens_per_url": 1500,
+        "output_tokens_per_url": 300,
+        "description": "Metadata, sitemap fields, and focused GEO checks.",
+    },
+    "page_summary": {
+        "label": "Page summary",
+        "input_tokens_per_url": 3000,
+        "output_tokens_per_url": 500,
+        "description": "Rendered/page excerpt summary plus metadata check.",
+    },
+    "full_page_medium": {
+        "label": "Full page medium",
+        "input_tokens_per_url": 10000,
+        "output_tokens_per_url": 750,
+        "description": "Medium full-page text pass for deeper content auditing.",
+    },
+}
 
 
 @dataclass
@@ -329,6 +357,171 @@ def parse_target_urls() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                 }
             )
     return targets, issues
+
+
+def read_url_registry() -> list[dict[str, Any]]:
+    if not URL_REGISTRY_CSV.exists():
+        return []
+    with URL_REGISTRY_CSV.open(encoding="utf-8", newline="") as fh:
+        return list(csv.DictReader(fh))
+
+
+def registry_filter_from_query(query: dict[str, list[str]]) -> dict[str, str]:
+    return {
+        "query": query.get("query", [""])[0].strip(),
+        "brand": query.get("brand", ["all"])[0] or "all",
+        "region": query.get("region", ["all"])[0] or "all",
+        "country": query.get("country", ["all"])[0] or "all",
+        "locale": query.get("locale", ["all"])[0] or "all",
+        "page_type": query.get("page_type", ["all"])[0] or "all",
+        "content_group": query.get("content_group", ["all"])[0] or "all",
+        "location_confidence": query.get("location_confidence", ["all"])[0] or "all",
+        "audit_profile": query.get("audit_profile", ["metadata_light"])[0] or "metadata_light",
+        "model": query.get("model", ["gpt-5.4-mini"])[0] or "gpt-5.4-mini",
+    }
+
+
+def registry_filter_from_payload(payload: dict[str, Any]) -> dict[str, str]:
+    values = payload.get("filters") if isinstance(payload.get("filters"), dict) else payload
+    return {
+        "query": str(values.get("query") or "").strip(),
+        "brand": str(values.get("brand") or "all"),
+        "region": str(values.get("region") or "all"),
+        "country": str(values.get("country") or "all"),
+        "locale": str(values.get("locale") or "all"),
+        "page_type": str(values.get("page_type") or "all"),
+        "content_group": str(values.get("content_group") or "all"),
+        "location_confidence": str(values.get("location_confidence") or "all"),
+        "audit_profile": str(values.get("audit_profile") or "metadata_light"),
+        "model": str(values.get("model") or "gpt-5.4-mini"),
+    }
+
+
+def filter_registry_rows(rows: list[dict[str, Any]], filters: dict[str, str]) -> list[dict[str, Any]]:
+    query = filters.get("query", "").lower()
+    exact_fields = ["brand", "region", "country", "locale", "page_type", "content_group", "location_confidence"]
+    filtered: list[dict[str, Any]] = []
+    for row in rows:
+        if any(filters.get(field, "all") != "all" and row.get(field) != filters[field] for field in exact_fields):
+            continue
+        if query:
+            haystack = " ".join(
+                str(row.get(field, ""))
+                for field in ["normalized_url", "brand", "country", "region", "locale", "page_type", "hotel_name", "content_group"]
+            ).lower()
+            if query not in haystack:
+                continue
+        filtered.append(row)
+    return filtered
+
+
+def registry_options(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    option_fields = ["brand", "region", "country", "locale", "page_type", "content_group", "location_confidence"]
+    options: dict[str, list[dict[str, Any]]] = {}
+    for field in option_fields:
+        counts: dict[str, int] = {}
+        for row in rows:
+            value = row.get(field) or "Unspecified"
+            counts[value] = counts.get(value, 0) + 1
+        options[field] = [
+            {"value": value, "label": value, "count": count}
+            for value, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        ]
+    return options
+
+
+def estimate_registry_cost(row_count: int, profile_id: str, model_id: str) -> dict[str, Any]:
+    profile = AUDIT_PROFILES.get(profile_id) or AUDIT_PROFILES["metadata_light"]
+    model = MODEL_PRICES_PER_MILLION.get(model_id) or MODEL_PRICES_PER_MILLION["gpt-5.4-mini"]
+    input_tokens = row_count * int(profile["input_tokens_per_url"])
+    output_tokens = row_count * int(profile["output_tokens_per_url"])
+    input_cost = (input_tokens / 1_000_000) * model["input"]
+    output_cost = (output_tokens / 1_000_000) * model["output"]
+    return {
+        "row_count": row_count,
+        "profile_id": profile_id if profile_id in AUDIT_PROFILES else "metadata_light",
+        "profile": profile,
+        "model_id": model_id if model_id in MODEL_PRICES_PER_MILLION else "gpt-5.4-mini",
+        "model_prices_per_million": model,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": input_tokens + output_tokens,
+        "input_cost_usd": round(input_cost, 2),
+        "output_cost_usd": round(output_cost, 2),
+        "total_cost_usd": round(input_cost + output_cost, 2),
+        "batch_total_cost_usd_estimate": round((input_cost + output_cost) * 0.5, 2),
+    }
+
+
+def registry_payload(filters: dict[str, str], *, limit: int = 250, offset: int = 0) -> dict[str, Any]:
+    rows = read_url_registry()
+    filtered = filter_registry_rows(rows, filters)
+    selected_rows = read_next_geo_run_rows()
+    selected_urls = {row.get("normalized_url") or row.get("canonical_url") or row.get("url") for row in selected_rows}
+    for row in filtered:
+        row["selected_for_next_run"] = "true" if row.get("normalized_url") in selected_urls else row.get("selected_for_next_run", "false")
+    return {
+        "registry_path": rel(URL_REGISTRY_CSV),
+        "next_run_path": rel(NEXT_GEO_RUN_CSV),
+        "total_records": len(rows),
+        "filtered_count": len(filtered),
+        "selected_count": len(selected_rows),
+        "filters": filters,
+        "options": registry_options(rows),
+        "audit_profiles": AUDIT_PROFILES,
+        "model_prices_per_million": MODEL_PRICES_PER_MILLION,
+        "cost_estimate": estimate_registry_cost(len(filtered), filters.get("audit_profile", "metadata_light"), filters.get("model", "gpt-5.4-mini")),
+        "rows": filtered[offset : offset + limit],
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+def read_next_geo_run_rows() -> list[dict[str, Any]]:
+    if not NEXT_GEO_RUN_CSV.exists():
+        return []
+    with NEXT_GEO_RUN_CSV.open(encoding="utf-8", newline="") as fh:
+        return list(csv.DictReader(fh))
+
+
+def write_next_geo_run(rows: list[dict[str, Any]]) -> None:
+    NEXT_GEO_RUN_CSV.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = list(rows[0].keys()) if rows else [
+        "url",
+        "canonical_url",
+        "normalized_url",
+        "brand",
+        "region",
+        "locale",
+        "page_type",
+    ]
+    with NEXT_GEO_RUN_CSV.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            updated = dict(row)
+            updated["selected_for_next_run"] = "true"
+            writer.writerow(updated)
+
+
+def save_registry_selection(payload: dict[str, Any]) -> dict[str, Any]:
+    rows = read_url_registry()
+    filters = registry_filter_from_payload(payload)
+    explicit_urls = set(str(url) for url in payload.get("selected_urls", []) if url)
+    if explicit_urls:
+        selected = [
+            row for row in rows
+            if (row.get("normalized_url") or row.get("canonical_url") or row.get("url")) in explicit_urls
+        ]
+    else:
+        selected = filter_registry_rows(rows, filters)
+    write_next_geo_run(selected)
+    return {
+        "next_run_path": rel(NEXT_GEO_RUN_CSV),
+        "selected_count": len(selected),
+        "filters": filters,
+        "cost_estimate": estimate_registry_cost(len(selected), filters.get("audit_profile", "metadata_light"), filters.get("model", "gpt-5.4-mini")),
+    }
 
 
 def artifact_paths(run: dict[str, Any]) -> dict[str, Path]:
@@ -1012,6 +1205,7 @@ def build_dashboard_data(run_id: str, record_history: bool = True) -> dict[str, 
             "selector_warnings": sum(1 for rec in recommendations if rec.get("selector_status", "").startswith("Warning")),
         },
     }
+    attach_jira_ticket_fields(run_id, data)
     validation = validate_dashboard(data, target_issues)
     data["run"]["validation_errors"] = validation["errors"]
     write_json(run_dir / "dashboard_data.json", data)
@@ -1124,6 +1318,7 @@ def apply_overrides(data: dict[str, Any], overrides_payload: dict[str, Any]) -> 
     overrides = overrides_payload.get("overrides", {})
     if not overrides:
         data["team_overrides"] = {}
+        attach_jira_ticket_fields(data.get("run", {}).get("run_id", "run"), data)
         return data
     data = json.loads(json.dumps(data))
     data["team_overrides"] = overrides
@@ -1145,6 +1340,7 @@ def apply_overrides(data: dict[str, Any], overrides_payload: dict[str, Any]) -> 
             block["adjusted_text"] = adjusted_copy
             block["export_value"] = adjusted_copy
     data["recommendations"] = sorted(data.get("recommendations", []), key=lambda item: item.get("combined_score", 0), reverse=True)
+    attach_jira_ticket_fields(data.get("run", {}).get("run_id", "run"), data)
     return data
 
 
@@ -1249,10 +1445,448 @@ def fallback_http_capture(url: str, capture_dir: Path) -> dict[str, Any]:
     return result
 
 
+JIRA_CSV_FIELDS = [
+    "Issue Type",
+    "Epic Name",
+    "Summary",
+    "Description",
+    "Priority",
+    "Labels",
+    "Component",
+    "Acceptance Criteria",
+]
+
+
+def export_jira_csv(run_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=JIRA_CSV_FIELDS, lineterminator="\n")
+    writer.writeheader()
+
+    epic_name = f"RHG GEO Optimizer Audit Actions - {run_id}"
+    evaluation = geo_visibility_evaluation(data)
+
+    blocks_by_proposal: dict[str, list[dict[str, Any]]] = {}
+    for block in data.get("copy_blocks", []):
+        blocks_by_proposal.setdefault(block.get("proposal_id"), []).append(block)
+
+    for rec in data.get("recommendations", []):
+        writer.writerow(jira_story_row(run_id, epic_name, rec, blocks_by_proposal.get(rec.get("proposal_id"), []), evaluation))
+
+    return {"type": "csv", "content": output.getvalue()}
+
+
+def jira_story_row(
+    run_id: str,
+    epic_name: str,
+    rec: dict[str, Any],
+    copy_blocks: list[dict[str, Any]],
+    evaluation: dict[str, Any],
+) -> dict[str, str]:
+    draft = rec.get("team_override", {}).get("ticket_draft", {}) or {}
+    proposal_type = infer_jira_proposal_type(rec, copy_blocks)
+    target_urls = target_urls_for_rec(rec)
+    target_component = infer_jira_target_component(rec)
+    page_type = infer_jira_page_type(rec, target_urls)
+    proposed_value = infer_jira_proposed_value(rec, copy_blocks)
+    summary = jira_summary({"title": draft.get("summary") or rec.get("title") or rec.get("proposal_id")})
+    target_url_text = ", ".join(target_urls) or ", ".join(rec.get("page_refs", []) or []) or "[NEEDED: target URL]"
+    required_change = rec.get("proposed_change") or "[NEEDED: recommended change]"
+    developer_change_specs = [
+        f"Change type: {proposal_type}",
+        f"Page type: {page_type}",
+        f"Target component: {target_component or '[NEEDED: target component]'}",
+        f"Target URL(s): {target_url_text}",
+        f"Current state: {rec.get('current_state') or '[NEEDED: current state]'}",
+        f"Required change: {required_change}",
+        f"Evidence tier: {rec.get('evidence_tier') or 'Not set'}",
+        f"Evidence sources: {', '.join(rec.get('evidence_source_ids', [])) or 'None linked'}",
+    ]
+    if proposed_value and clean_inline(proposed_value) != clean_inline(required_change):
+        developer_change_specs.insert(6, f"Proposed value/state: {proposed_value}")
+    validation_steps = draft.get("validation_steps") or build_jira_validation_steps(proposal_type, target_urls[0] if target_urls else "")
+    acceptance_criteria = draft.get("acceptance_criteria") or build_jira_acceptance_criteria(proposal_type)
+    seo_rationale = build_jira_seo_rationale(proposal_type)
+    description = " ".join(
+        [
+            jira_section_text("Dev change specs", developer_change_specs),
+            jira_section_text("SEO/GEO rationale", [seo_rationale]),
+            jira_section_text("Validation steps", validation_steps),
+            jira_section_text(
+                "GEO visibility score",
+                [
+                    f"Run score: {evaluation['rating']}/100",
+                    f"Proposal score: {rec.get('combined_score', 'Not set')}",
+                    f"Readiness status: {ticket_readiness_label(rec)}",
+                ],
+            ),
+        ]
+    )
+
+    return {
+        "Issue Type": "Story",
+        "Epic Name": epic_name,
+        "Summary": summary,
+        "Description": description,
+        "Priority": jira_priority(rec),
+        "Labels": jira_labels(run_id, rec, proposal_type),
+        "Component": jira_component(rec, proposal_type),
+        "Acceptance Criteria": jira_bullet_inline(acceptance_criteria),
+    }
+
+
+def attach_jira_ticket_fields(run_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    blocks_by_proposal: dict[str, list[dict[str, Any]]] = {}
+    for block in data.get("copy_blocks", []):
+        blocks_by_proposal.setdefault(block.get("proposal_id"), []).append(block)
+
+    epic_name = f"RHG GEO Optimizer Audit Actions - {run_id}"
+    evaluation = geo_visibility_evaluation(data)
+    required_fields = list(JIRA_CSV_FIELDS)
+    recommendations = data.get("recommendations", [])
+    for rec in recommendations:
+        row = jira_story_row(run_id, epic_name, rec, blocks_by_proposal.get(rec.get("proposal_id"), []), evaluation)
+        labels = [label for label in row["Labels"].split(";") if label]
+        rec["jira_ticket"] = {
+            "format": "jira_csv",
+            "required_fields": required_fields,
+            "issue_type": row["Issue Type"],
+            "name": row["Summary"],
+            "epic_name": row["Epic Name"],
+            "summary": row["Summary"],
+            "description": row["Description"],
+            "priority": row["Priority"],
+            "labels": labels,
+            "component": row["Component"],
+            "acceptance_criteria": row["Acceptance Criteria"],
+            "csv_fields": row,
+        }
+
+    data.setdefault("jira_export", {})
+    data["jira_export"].update(
+        {
+            "format": "jira_csv",
+            "fields": required_fields,
+            "epic_name": epic_name,
+            "ticket_count": len(recommendations),
+        }
+    )
+    data.setdefault("summary", {})["jira_tickets"] = len(recommendations)
+    return data
+
+
+def geo_visibility_evaluation(data: dict[str, Any]) -> dict[str, int]:
+    recommendations = data.get("recommendations", [])
+    summary = data.get("summary", {}) or {}
+    warnings = int(summary.get("selector_warnings") or 0)
+    errors = len(data.get("run", {}).get("validation_errors", []) or [])
+    implementation_ready = int(summary.get("implementation_ready") or 0)
+    ready_to_send = max(0, implementation_ready - warnings)
+    average_score = (
+        sum(float(rec.get("combined_score") or 0) for rec in recommendations) / len(recommendations)
+        if recommendations
+        else 0
+    )
+    crawl = geo_crawlability_metrics(data)
+    uncapped_rating = average_score - warnings * 0.8 - errors * 4 - crawl["penalty"]
+    rating = round(max(0, min(99, min(uncapped_rating, crawl["cap"]))))
+    return {
+        "rating": rating,
+        "ready_to_send": ready_to_send,
+        "needs_review": warnings,
+        "blocked_pages": crawl["blocked_pages"],
+    }
+
+
+def geo_crawlability_metrics(data: dict[str, Any]) -> dict[str, int | bool]:
+    page_statuses = []
+    for page in data.get("radisson_pages", []) or []:
+        metadata = page.get("metadata_snapshot", {}) or {}
+        live_capture = page.get("live_capture_refs", {}) or {}
+        status_text = " ".join(
+            str(value or "")
+            for value in [
+                metadata.get("fetch_status"),
+                metadata.get("raw_excerpt"),
+                live_capture.get("status"),
+                (live_capture.get("metadata", {}) or {}).get("title"),
+                (live_capture.get("sections") or [{}])[0].get("text"),
+            ]
+        )
+        checked = bool(metadata.get("fetch_status") or (live_capture.get("status") and live_capture.get("status") != "not_captured"))
+        page_statuses.append(
+            {
+                "checked": checked,
+                "blocked": checked and bool(re.search(r"\b403\b|blocked|access restricted|temporarily restricted", status_text, flags=re.IGNORECASE)),
+            }
+        )
+
+    checked_pages = sum(1 for page in page_statuses if page["checked"])
+    blocked_pages = sum(1 for page in page_statuses if page["blocked"])
+    access_evidence = " ".join(
+        [
+            *(
+                f"{rec.get('title', '')} {rec.get('current_state', '')} {rec.get('proposed_change', '')}"
+                for rec in data.get("recommendations", []) or []
+            ),
+            *(
+                f"{item.get('current_value', '')} {item.get('proposed_value', '')}"
+                for item in data.get("metadata_changes", []) or []
+            ),
+            *(f"{item.get('original_text', '')}" for item in data.get("copy_blocks", []) or []),
+        ]
+    )
+    robots_blocked = bool(
+        re.search(
+            r"robots\.txt.{0,160}(403|blocked|unreadable)|(403|blocked|unreadable).{0,160}robots\.txt",
+            access_evidence,
+            flags=re.IGNORECASE,
+        )
+    )
+    sitewide_blocked = (checked_pages >= 3 and blocked_pages == checked_pages) or bool(
+        re.search(r"all WebFetch attempts.{0,180}(403|blocked)|WAF.{0,120}Block AI", access_evidence, flags=re.IGNORECASE)
+    )
+    blocked_ratio = blocked_pages / checked_pages if checked_pages else 0
+    page_penalty = 6 + round(blocked_ratio * 8) + min(blocked_pages, 4) if blocked_pages else 0
+    penalty = min(18, page_penalty + (2 if robots_blocked else 0) + (2 if sitewide_blocked else 0))
+    cap = 72 if sitewide_blocked else 84 if blocked_pages else 99
+    return {
+        "checked_pages": checked_pages,
+        "blocked_pages": blocked_pages,
+        "robots_blocked": robots_blocked,
+        "sitewide_blocked": sitewide_blocked,
+        "penalty": penalty,
+        "cap": cap,
+    }
+
+
+def jira_summary(rec: dict[str, Any]) -> str:
+    title = rec.get("title") or rec.get("proposal_id") or "GEO proposal"
+    return re.sub(r"^GEO\s*-\s*", "", clean_inline(title), flags=re.IGNORECASE)
+
+
+def target_urls_for_rec(rec: dict[str, Any]) -> list[str]:
+    seen: set[str] = set()
+    urls: list[str] = []
+    for ref in rec.get("page_refs", []) or []:
+        value = str(ref or "")
+        if value.startswith("http") and value not in seen:
+            urls.append(value)
+            seen.add(value)
+    return urls
+
+
+def infer_jira_proposal_type(rec: dict[str, Any], copy_blocks: list[dict[str, Any]]) -> str:
+    text = f"{rec.get('title', '')} {rec.get('proposed_change', '')} {rec.get('section_label', '')} {rec.get('surface', '')}".lower()
+    block_text = " ".join(
+        f"{block.get('target_field_or_section', '')} {block.get('format_type', '')} {block.get('copy_label', '')}".lower()
+        for block in copy_blocks
+    )
+    if re.search(r"\b(json-ld|schema|structured data|memberprogram|faqpage)\b", block_text):
+        return "schema_update"
+    if re.search(r"\b(json-ld|schema|structured data|memberprogram|faqpage)\b", text):
+        return "schema_update"
+    if re.search(r"title|meta description|metadata|open graph|og:", text):
+        return "metadata_update"
+    if re.search(r"javascript|html|visible|crawler|bot|rendered|cloudflare|llms\.txt", text):
+        return "html_visibility"
+    return "content_visibility"
+
+
+def infer_jira_target_component(rec: dict[str, Any]) -> str:
+    section = rec.get("section_label")
+    if section and section != "Page section":
+        return section
+    text = f"{rec.get('title', '')} {rec.get('proposed_change', '')}".lower()
+    if "room" in text:
+        return "Rooms"
+    if "service" in text:
+        return "Services"
+    if "faq" in text:
+        return "FAQ"
+    if "title" in text:
+        return "Page title"
+    if "meta" in text:
+        return "Metadata"
+    if "cloudflare" in text:
+        return "Cloudflare / crawler access"
+    if "llms.txt" in text:
+        return "llms.txt"
+    return rec.get("surface") or "Page content"
+
+
+def infer_jira_page_type(rec: dict[str, Any], target_urls: list[str]) -> str:
+    joined = " ".join(target_urls or rec.get("page_refs", []) or []).lower()
+    if "/brand/" in joined:
+        return "brand_page"
+    if "/rewards" in joined:
+        return "rewards"
+    if "/destination" in joined:
+        return "destination"
+    if "/rooms" in joined:
+        return "rooms"
+    if "/services" in joined:
+        return "services"
+    if "/offers" in joined:
+        return "offers"
+    if "/hotel" in joined:
+        return "hotel_detail"
+    return "portfolio_or_other"
+
+
+def infer_jira_proposed_value(rec: dict[str, Any], copy_blocks: list[dict[str, Any]]) -> str:
+    schema_block = next(
+        (
+            block
+            for block in copy_blocks
+            if re.search(r"json-ld|schema", f"{block.get('format_type', '')} {block.get('copy_label', '')}", flags=re.IGNORECASE)
+        ),
+        None,
+    )
+    if schema_block and schema_block.get("export_value"):
+        return schema_block["export_value"]
+    return rec.get("before_after", {}).get("after") or rec.get("proposed_change") or ""
+
+
+def build_jira_seo_rationale(proposal_type: str) -> str:
+    if proposal_type == "html_visibility":
+        return "This change improves crawler and AI-engine access to content in delivered HTML without depending on client-side rendering."
+    if proposal_type == "schema_update":
+        return "This change improves structured data coverage and gives search and AI systems clearer machine-readable entity signals."
+    if proposal_type == "metadata_update":
+        return "This change improves machine-readable metadata quality for search surfaces and AI retrieval workflows."
+    return "This change improves crawler and AI-engine access to visible page content and user-facing signals."
+
+
+def build_jira_validation_steps(proposal_type: str, target_url: str) -> list[str]:
+    url = target_url or "[NEEDED: target URL]"
+    if proposal_type == "html_visibility":
+        return [
+            f"Open {url}.",
+            "Disable JavaScript and reload the page.",
+            "Inspect the delivered HTML or page source.",
+            "Confirm the target content is present without a client-side dependency.",
+            "Confirm no visible page regression when JavaScript is enabled.",
+        ]
+    if proposal_type == "schema_update":
+        return [
+            f"Open {url}.",
+            "Inspect the rendered JSON-LD or structured data output.",
+            "Confirm the required schema field or value is present.",
+            "Validate that the updated schema still parses correctly.",
+            "Confirm no visible page regression.",
+        ]
+    if proposal_type == "metadata_update":
+        return [
+            f"Open {url}.",
+            "Inspect the page head metadata in the delivered HTML.",
+            "Confirm the updated metadata field contains the expected value.",
+            "Verify the value matches the ticket copy exactly.",
+            "Confirm no visible page regression.",
+        ]
+    return [
+        f"Open {url}.",
+        "Inspect the target page output.",
+        "Confirm the required content or value is present in the expected location.",
+        "Verify the change matches the ticket description.",
+        "Confirm no visible page regression.",
+    ]
+
+
+def build_jira_acceptance_criteria(proposal_type: str) -> list[str]:
+    baseline = [
+        "Required content or value is present in the delivered page output.",
+        "Change applies to the listed target URL or page set.",
+        "Existing visible behavior remains unchanged unless specified in the ticket.",
+        "Evidence is attached before the ticket moves to validation.",
+    ]
+    if proposal_type == "html_visibility":
+        return [
+            "Target content is present in server-delivered HTML when JavaScript is disabled.",
+            *baseline[1:],
+        ]
+    if proposal_type == "schema_update":
+        return [
+            "Updated structured data field or object is present in the rendered output.",
+            *baseline[1:],
+        ]
+    return baseline
+
+
+def jira_priority(rec: dict[str, Any]) -> str:
+    priority = str(rec.get("priority_tier") or "").upper()
+    if "P1" in priority:
+        return "Highest"
+    if "P2" in priority:
+        return "High"
+    if "P3" in priority:
+        return "Medium"
+    score = float(rec.get("combined_score") or 0)
+    if score >= 90:
+        return "Highest"
+    if score >= 80:
+        return "High"
+    return "Medium"
+
+
+def jira_component(rec: dict[str, Any], proposal_type: str) -> str:
+    surface = str(rec.get("surface") or "").lower()
+    if "strategic" in surface or proposal_type == "html_visibility":
+        return "Platform"
+    if proposal_type == "schema_update":
+        return "SEO / Schema"
+    if proposal_type == "metadata_update":
+        return "SEO / Metadata"
+    if "content" in surface:
+        return "Content"
+    return "SEO/GEO"
+
+
+def ticket_readiness_label(rec: dict[str, Any]) -> str:
+    if "warning" in str(rec.get("selector_status") or "").lower():
+        return "Need review"
+    if rec.get("evidence_tier") == "Implementation-ready":
+        return "Ready to send"
+    return rec.get("evidence_tier") or "Review"
+
+
+def jira_labels(run_id: str, rec: dict[str, Any], proposal_type: str) -> str:
+    labels = [
+        "GEO",
+        "GEO-Visibility",
+        "Performance-Evaluation",
+        run_id,
+        str(rec.get("proposal_id") or "proposal"),
+        proposal_type.replace("_", "-"),
+    ]
+    return ";".join(labels)
+
+
+def jira_bullet_inline(items: Any) -> str:
+    if isinstance(items, str):
+        values = [clean_inline(line.lstrip("-").strip()) for line in items.splitlines() if line.strip()]
+    else:
+        values = [clean_inline(item) for item in (items or []) if clean_inline(item)]
+    return " ".join(f"- {item}" for item in values)
+
+
+def jira_section_text(title: str, items: Any) -> str:
+    return f"{title}: {jira_bullet_inline(items)}".strip()
+
+
+def bullet_text(items: Any) -> str:
+    if isinstance(items, str):
+        values = [line.strip().lstrip("-").strip() for line in items.splitlines() if line.strip()]
+    else:
+        values = [str(item).strip() for item in (items or []) if str(item).strip()]
+    return "\n".join(f"- {item}" for item in values)
+
+
 def export_dashboard(run_id: str, export_type: str) -> dict[str, Any]:
     data = get_dashboard_data(run_id)
     if export_type == "json":
         return {"type": "json", "content": json.dumps(data, indent=2, ensure_ascii=False)}
+    if export_type == "jira_csv":
+        return export_jira_csv(run_id, data)
     if export_type == "csv":
         output = io.StringIO()
         writer = csv.DictWriter(
@@ -1361,6 +1995,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(status_payload())
             elif path == "/api/runs":
                 self.send_json({"runs": get_runs()})
+            elif path == "/api/url-registry":
+                filters = registry_filter_from_query(query)
+                limit = int(query.get("limit", ["250"])[0] or 250)
+                offset = int(query.get("offset", ["0"])[0] or 0)
+                self.send_json(registry_payload(filters, limit=limit, offset=offset))
             elif path == "/api/targets":
                 self.send_json({"path": rel(TARGET_URLS), "content": TARGET_URLS.read_text(encoding="utf-8")})
             elif path == "/api/artifact":
@@ -1393,6 +2032,8 @@ class Handler(BaseHTTPRequestHandler):
                     args.append("--skip-scrape")
                 result = run_runner(*args)
                 self.send_json({"command": result.__dict__, "status": status_payload()}, status=200 if result.exit_code == 0 else 409)
+            elif path == "/api/url-registry/selection":
+                self.send_json(save_registry_selection(payload))
             else:
                 self.send_error(404, "Not found")
         except Exception as exc:
