@@ -491,17 +491,14 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
             <div className="readiness-fact fact-total">
               <b>{metrics.recommendations}</b>
               <span>Total recommendations</span>
-              <small>Proposal tickets</small>
             </div>
             <div className="readiness-fact fact-ready">
               <b>{metrics.ready}</b>
               <span>Ready to send</span>
-              <small>Included in total</small>
             </div>
             <div className="readiness-fact fact-review">
               <b>{metrics.needsReview}</b>
               <span>Need review</span>
-              <small>Included in total</small>
             </div>
             <div className="readiness-fact fact-crawl">
               <b>{metrics.crawl.blockedPages}</b>
@@ -509,12 +506,10 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
                 403 / restricted reads
                 <FactInfo label="403 / restricted reads" text={recommendationCountNotation(metrics)} />
               </span>
-              <small>Not in total</small>
             </div>
             <div className="readiness-fact fact-sources">
               <b>{metrics.sources}</b>
               <span>Sources reviewed</span>
-              <small>Evidence inputs</small>
             </div>
           </div>
         </div>

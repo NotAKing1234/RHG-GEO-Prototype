@@ -1883,15 +1883,6 @@ input {
   line-height: 1.25;
 }
 
-.readiness-fact > small {
-  display: block;
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 650;
-  line-height: 1.25;
-}
-
 .readiness-fact > .readiness-fact-label {
   display: inline-flex;
   align-items: center;
