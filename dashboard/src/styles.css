@@ -197,7 +197,8 @@ button:disabled {
 
 .run-select,
 .filter-panel label,
-.view-toolbar label {
+.view-toolbar label,
+.registry-filters label {
   display: grid;
   gap: 5px;
   min-width: 0;
@@ -801,6 +802,119 @@ code {
   grid-template-columns: 300px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+}
+
+.registry-workspace {
+  display: grid;
+  gap: 16px;
+}
+
+.registry-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.inline-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid #bad8c7;
+  border-radius: 8px;
+  background: #f0f8f3;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.registry-filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.6fr) repeat(3, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.registry-filters .search-box {
+  grid-column: span 2;
+}
+
+.registry-table-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.registry-table-header h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+}
+
+.registry-table {
+  display: grid;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.registry-row {
+  display: grid;
+  grid-template-columns: 48px minmax(280px, 2.2fr) minmax(140px, 0.9fr) minmax(220px, 1.2fr) minmax(160px, 1fr) minmax(170px, 1fr);
+  align-items: center;
+  min-width: 1080px;
+  min-height: 58px;
+  border-top: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.registry-row:first-child {
+  border-top: 0;
+}
+
+.registry-row > span,
+.registry-row > label {
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.registry-head {
+  min-height: 40px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.registry-check {
+  display: grid;
+  place-items: center;
+}
+
+.registry-check input {
+  width: 18px;
+  min-height: 18px;
+}
+
+.registry-url {
+  overflow-wrap: anywhere;
+}
+
+.registry-url strong,
+.registry-url small {
+  display: block;
+}
+
+.registry-url small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .page-list-panel {
@@ -1613,7 +1727,8 @@ input {
 .overview-shell,
 .main-column,
 .detail-layout,
-.page-workspace {
+.page-workspace,
+.registry-workspace {
   padding: 24px 32px 32px 38px;
 }
 
@@ -2300,7 +2415,8 @@ input {
   .overview-shell,
   .main-column,
   .detail-layout,
-  .page-workspace {
+  .page-workspace,
+  .registry-workspace {
     padding-left: 24px;
     padding-right: 24px;
   }
@@ -2322,6 +2438,15 @@ input {
 
   .ticket-field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .registry-stats,
+  .registry-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .registry-filters .search-box {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2374,7 +2499,8 @@ input {
   .overview-shell,
   .main-column,
   .detail-layout,
-  .page-workspace {
+  .page-workspace,
+  .registry-workspace {
     padding-left: 20px;
     padding-right: 20px;
   }
@@ -2405,6 +2531,11 @@ input {
   .topbar-actions .icon-button {
     flex: 0 0 48px;
     width: 48px;
+  }
+
+  .registry-stats,
+  .registry-filters {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .readiness-panel {
