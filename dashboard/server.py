@@ -362,17 +362,86 @@ def parse_target_urls() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
 
 def read_url_registry() -> list[dict[str, Any]]:
     if not URL_REGISTRY_CSV.exists():
-        return []
+        return target_urls_registry_rows()
     with URL_REGISTRY_CSV.open(encoding="utf-8", newline="") as fh:
         return list(csv.DictReader(fh))
 
 
 def read_url_registry_fieldnames() -> list[str]:
     if not URL_REGISTRY_CSV.exists():
-        return []
+        return [
+            "url",
+            "canonical_url",
+            "normalized_url",
+            "brand",
+            "locale",
+            "country",
+            "region",
+            "location_source",
+            "location_confidence",
+            "content_group",
+            "page_type",
+            "source_sitemap",
+            "selected_for_next_run",
+            "priority",
+        ]
     with URL_REGISTRY_CSV.open(encoding="utf-8", newline="") as fh:
         reader = csv.reader(fh)
         return next(reader, [])
+
+
+def target_url_registry_details(canonical_url: str) -> dict[str, str]:
+    parsed = urllib.parse.urlsplit(canonical_url)
+    parts = [part for part in parsed.path.split("/") if part]
+    locale = parts[0].lower() if parts and re.match(r"^[a-z]{2}-[a-z]{2}$", parts[0], flags=re.IGNORECASE) else ""
+    path_parts = parts[1:] if locale else parts
+    page_type = "homepage"
+    content_group = "homepage"
+    brand = "Unclassified"
+    if path_parts[:1] == ["brand"] and len(path_parts) > 1:
+        page_type = "brand"
+        content_group = path_parts[1]
+        brand = {
+            "park-plaza": "Park Plaza",
+            "radisson-blu": "Radisson Blu",
+            "radisson-collection": "Radisson Collection",
+            "radisson-red": "Radisson RED",
+            "radisson": "Radisson",
+        }.get(path_parts[1], path_parts[1].replace("-", " ").title())
+    elif path_parts:
+        page_type = path_parts[0].replace("-", " ")
+        content_group = path_parts[0]
+    locale_country = "United States" if locale == "en-us" else ""
+    return {
+        "brand": brand,
+        "locale": locale,
+        "country": locale_country,
+        "region": "North America" if locale_country == "United States" else "",
+        "location_source": "target_urls.md",
+        "location_confidence": "low",
+        "content_group": content_group,
+        "page_type": page_type,
+    }
+
+
+def target_urls_registry_rows() -> list[dict[str, Any]]:
+    targets, _issues = parse_target_urls()
+    rows: list[dict[str, Any]] = []
+    for target in targets:
+        canonical = target.get("canonical_url") or ""
+        source_url = target.get("source_url") or canonical
+        rows.append(
+            {
+                "url": source_url,
+                "canonical_url": canonical,
+                "normalized_url": canonical,
+                "source_sitemap": rel(TARGET_URLS),
+                "selected_for_next_run": "false",
+                "priority": target.get("registry_priority") or "Target URL",
+                **target_url_registry_details(canonical),
+            }
+        )
+    return rows
 
 
 def registry_field_value(row: dict[str, Any], field: str) -> str:
@@ -490,8 +559,13 @@ def registry_payload(filters: dict[str, str], *, limit: int = 250, offset: int =
     selected_urls = {selected_url_key(row) for row in selected_rows}
     for row in filtered:
         row["selected_for_next_run"] = "true" if selected_url_key(row) in selected_urls else row.get("selected_for_next_run", "false")
+    registry_missing = not URL_REGISTRY_CSV.exists()
     return {
         "registry_path": rel(URL_REGISTRY_CSV),
+        "registry_source": "target_urls_fallback" if registry_missing else "registry_csv",
+        "registry_source_label": "Target URLs fallback" if registry_missing else "Enriched URL registry",
+        "registry_missing": registry_missing,
+        "registry_source_path": rel(TARGET_URLS) if registry_missing else rel(URL_REGISTRY_CSV),
         "next_run_path": rel(NEXT_GEO_RUN_CSV),
         "total_records": len(rows),
         "filtered_count": len(filtered),

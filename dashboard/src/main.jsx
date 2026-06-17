@@ -810,6 +810,14 @@ function RegistryView({ data, filters, setFilters, offset, setOffset, selectedUr
             <span>Saved {data.last_save.selected_count} URLs to {data.last_save.next_run_path}.</span>
           </div>
         )}
+        {data?.registry_missing && (
+          <div className="inline-notice warning">
+            <AlertTriangle size={16} />
+            <span>
+              Full registry CSV is missing. Showing distinct URLs from {data.registry_source_path} so registered links remain visible.
+            </span>
+          </div>
+        )}
         <div className="registry-filters">
           <label className="search-box">
             <Search size={17} />
@@ -872,7 +880,7 @@ function RegistryView({ data, filters, setFilters, offset, setOffset, selectedUr
         </div>
         <div className="registry-table" role="table" aria-label="Radisson URL registry">
           <div className="registry-row registry-head" role="row">
-            <span role="columnheader">Run</span>
+            <span role="columnheader">Select</span>
             <span role="columnheader">URL</span>
             <span role="columnheader">Brand</span>
             <span role="columnheader">Market</span>
