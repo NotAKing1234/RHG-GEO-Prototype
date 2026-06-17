@@ -85,6 +85,28 @@ class RegistrySelectionTests(unittest.TestCase):
         )
         self.assertEqual(row["Description"], "Saved reviewer description")
 
+    def test_scoped_run_targets_keeps_small_selected_subset(self):
+        targets = [
+            {"canonical_url": "https://example.com/a", "source_url": "https://example.com/a", "registry_priority": "selected"},
+            {"canonical_url": "https://example.com/b", "source_url": "https://example.com/b", "registry_priority": "selected"},
+        ]
+        metadata_pages = {"https://example.com/a": {"source_url": "https://example.com/a"}}
+        scoped, scope = server.scoped_run_targets(targets, metadata_pages, [])
+        self.assertEqual(len(scoped), 2)
+        self.assertFalse(scope["scoped_from_large_active_target_file"])
+        self.assertEqual(scope["dashboard_target_count"], 2)
+
+    def test_scoped_run_targets_rejects_full_registry_shape(self):
+        targets = [
+            {"canonical_url": "https://example.com/a", "source_url": "https://example.com/a", "registry_priority": "registry"},
+            {"canonical_url": "https://example.com/b", "source_url": "https://example.com/b", "registry_priority": "registry"},
+            {"canonical_url": "https://example.com/c", "source_url": "https://example.com/c", "registry_priority": "registry"},
+        ]
+        metadata_pages = {"https://example.com/a": {"source_url": "https://example.com/a"}}
+        scoped, scope = server.scoped_run_targets(targets, metadata_pages, [])
+        self.assertEqual([row["canonical_url"] for row in scoped], ["https://example.com/a"])
+        self.assertTrue(scope["scoped_from_large_active_target_file"])
+
 
 class RunnerTargetTests(unittest.TestCase):
     def setUp(self):

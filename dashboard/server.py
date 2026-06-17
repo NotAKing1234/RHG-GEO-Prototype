@@ -1273,6 +1273,11 @@ def build_dashboard_data(run_id: str, record_history: bool = True) -> dict[str, 
     pages = build_pages(scoped_targets, metadata_pages, recommendations, run_dir)
     pages_audited = metadata_pages_audited_count(metadata_snapshot_text, metadata_pages)
     run_scope["pages_audited"] = pages_audited
+    run_scope["coverage_page_count"] = (
+        pages_audited or len(pages)
+        if run_scope.get("scoped_from_large_active_target_file")
+        else len(scoped_targets)
+    )
     metadata_changes = build_metadata_changes(recommendations, pages)
     data = {
         "schema_version": "geo_dashboard.v1",
@@ -1303,7 +1308,7 @@ def build_dashboard_data(run_id: str, record_history: bool = True) -> dict[str, 
             }
         ],
         "summary": {
-            "pages": pages_audited or len(pages),
+            "pages": run_scope["coverage_page_count"] or len(pages),
             "sources": len(sources),
             "criteria": len(criteria),
             "gaps": len(gaps),

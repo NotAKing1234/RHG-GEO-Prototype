@@ -2262,7 +2262,7 @@ function coverageRows(data) {
 function runPageCoverageCount(data) {
   const summary = data?.summary || {};
   const scope = data?.run?.scope || {};
-  return scope.pages_audited ?? summary.pages ?? data?.radisson_pages?.length ?? 0;
+  return scope.coverage_page_count ?? summary.pages ?? data?.radisson_pages?.length ?? 0;
 }
 
 function topRecommendations(recommendations, count) {
