@@ -710,6 +710,45 @@ textarea {
   line-height: 1.5;
 }
 
+.metadata-handoff-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.metadata-handoff-list {
+  display: grid;
+  gap: 12px;
+}
+
+.metadata-handoff-item {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.metadata-handoff-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.metadata-handoff-head strong,
+.metadata-handoff-head small {
+  display: block;
+}
+
+.metadata-handoff-head small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
 .priority-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

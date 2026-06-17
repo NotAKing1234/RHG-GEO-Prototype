@@ -35,7 +35,6 @@ const VIEWS = [
   { id: "registry", label: "URL Registry", icon: Database },
   { id: "pages", label: "Radisson Pages", icon: Globe2 },
   { id: "sources", label: "Sources", icon: BookOpen },
-  { id: "metadata", label: "Metadata", icon: Table2 },
   { id: "copy", label: "Copy Bank", icon: Clipboard },
   { id: "exports", label: "Exports", icon: Download }
 ];
@@ -161,6 +160,12 @@ function App() {
       loadRegistry(registryFilters, registryOffset);
     }
   }, [view, registryFilters, registryOffset]);
+
+  useEffect(() => {
+    if (view === "metadata") {
+      setView("recommendations");
+    }
+  }, [view]);
 
   async function loadRuns() {
     setError("");
@@ -435,7 +440,6 @@ function App() {
                 setView={setView}
               />
             )}
-            {view === "metadata" && <MetadataView data={data} lookups={lookups} />}
             {view === "copy" && <CopyBankView data={data} saveOverride={saveOverride} busy={busy} />}
             {view === "exports" && <ExportsView runId={selectedRunId} preferredExportType={preferredExportType} />}
           </>
@@ -935,6 +939,7 @@ function RecommendationDetail({ recommendation, data, lookups, saveOverride, bus
   }
   const sources = (recommendation.evidence_source_ids || []).map((id) => lookups.sources.get(id)).filter(Boolean);
   const copyBlocks = (data.copy_blocks || []).filter((block) => block.proposal_id === recommendation.proposal_id);
+  const metadataChanges = (data.metadata_changes || []).filter((item) => item.proposal_id === recommendation.proposal_id);
   return (
     <aside className="detail-column pinned">
       <div className="panel detail-card">
@@ -956,6 +961,8 @@ function RecommendationDetail({ recommendation, data, lookups, saveOverride, bus
         <PanelHeader icon={FileText} label="Before / after" title="Change Context" />
         <CompareBlock before={recommendation.before_after?.before || recommendation.current_state} after={recommendation.before_after?.after || recommendation.proposed_change} />
       </div>
+
+      <MetadataHandoffPanel changes={metadataChanges} recommendation={recommendation} />
 
       <TicketDraftingPanel recommendation={recommendation} copyBlocks={copyBlocks} saveOverride={saveOverride} busy={busy} />
 
@@ -980,6 +987,39 @@ function RecommendationDetail({ recommendation, data, lookups, saveOverride, bus
 
       <DiagramPanel title="Evidence Chain" diagram={recommendation.diagram} />
     </aside>
+  );
+}
+
+function MetadataHandoffPanel({ changes, recommendation }) {
+  if (!changes.length) return null;
+  return (
+    <div className="panel metadata-handoff-panel">
+      <PanelHeader icon={Table2} label={`${changes.length} implementation ${changes.length === 1 ? "field" : "fields"}`} title="Metadata / Implementation Fields" />
+      <div className="metadata-handoff-list">
+        {changes.map((item) => (
+          <div className="metadata-handoff-item" key={item.metadata_change_id}>
+            <div className="metadata-handoff-head">
+              <div>
+                <strong>{item.field_name || "Metadata field"}</strong>
+                <small>{shortUrl(item.page) || "Portfolio-wide"}</small>
+              </div>
+              {item.warning ? <Tag danger>{item.warning}</Tag> : <Tag ok>Ready for handoff</Tag>}
+            </div>
+            <CompareBlock before={item.current_value} after={item.proposed_value} />
+            <div className="button-row">
+              <button className="secondary-button" onClick={() => copyText(metadataFieldSpec(item, recommendation))}>
+                <Clipboard size={15} />
+                <span>Copy field spec</span>
+              </button>
+              <button className="secondary-button" onClick={() => copyText(item.proposed_value)}>
+                <Clipboard size={15} />
+                <span>Copy proposed value</span>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1590,46 +1630,6 @@ function SourceCard({ source, index, selected, onSelect }) {
   );
 }
 
-function MetadataView({ data, lookups }) {
-  const [groupBy, setGroupBy] = useState("page");
-  const rows = data.metadata_changes || [];
-  const groups = groupRows(rows, groupBy === "page" ? "page" : "field_name");
-  return (
-    <section className="main-column">
-      <div className="panel view-toolbar">
-        <PanelHeader icon={Table2} label={`${rows.length} changes`} title="Metadata Recommendations" />
-        <label>
-          Group by
-          <select value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
-            <option value="page">Page</option>
-            <option value="field">Metadata field</option>
-          </select>
-        </label>
-      </div>
-      {Object.entries(groups).map(([group, items]) => (
-        <div className="panel" key={group}>
-          <PanelHeader icon={FileText} label={`${items.length} records`} title={group || "Unassigned"} />
-          <div className="metadata-grid">
-            {items.map((item) => (
-              <div className="metadata-card" key={item.metadata_change_id}>
-                <div className="metadata-card-head">
-                  <strong>{item.field_name}</strong>
-                  {item.warning ? <Tag danger>{item.warning}</Tag> : <Tag>Current</Tag>}
-                </div>
-                <CompareBlock before={item.current_value} after={item.proposed_value} />
-                <button className="secondary-button" onClick={() => copyText(item.proposed_value)}>
-                  <Clipboard size={15} />
-                  <span>Copy proposed value</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </section>
-  );
-}
-
 function CopyBankView({ data, saveOverride, busy }) {
   const recommendations = buildLookups(data).recommendations;
   const byPage = groupRows(data.copy_blocks || [], "target_page");
@@ -1783,6 +1783,18 @@ function CompareBlock({ before, after }) {
       </div>
     </div>
   );
+}
+
+function metadataFieldSpec(item, recommendation) {
+  return [
+    `Proposal: ${recommendation.proposal_id} - ${recommendation.title || "Untitled recommendation"}`,
+    `Target URL: ${item.page || "[NEEDED: target URL]"}`,
+    `Field/component: ${item.field_name || "[NEEDED: metadata field]"}`,
+    `Current value/state: ${item.current_value || "[NEEDED: current value]"}`,
+    `Proposed value/state: ${item.proposed_value || "[NEEDED: proposed value]"}`,
+    `Readiness: ${item.warning || "Ready for handoff"}`,
+    `Evidence sources: ${(item.evidence_source_ids || recommendation.evidence_source_ids || []).join(", ") || "None linked"}`
+  ].join("\n");
 }
 
 function buildTicketDraftDefaults(recommendation, copyBlocks) {
@@ -2432,7 +2444,19 @@ function exportFileName(runId, exportType) {
 }
 
 function copyText(value) {
-  navigator.clipboard.writeText(value || "");
+  fallbackCopyText(value || "");
+}
+
+function fallbackCopyText(text) {
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.left = "-9999px";
+  document.body.appendChild(field);
+  field.select();
+  document.execCommand("copy");
+  document.body.removeChild(field);
 }
 
 function usePersistentState(key, defaultValue) {
