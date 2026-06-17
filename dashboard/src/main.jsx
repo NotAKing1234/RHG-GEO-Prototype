@@ -369,8 +369,8 @@ function SummaryBar({ data }) {
       <Metric label="Total recommendations" value={metrics.recommendations} />
       <Metric label="Ready to send" value={metrics.ready} />
       <Metric label="Need review" value={metrics.needsReview} danger={Boolean(metrics.needsReview)} />
-      <Metric label="Sources reviewed" value={metrics.sources} />
-      <Metric label="403 / restricted reads" value={metrics.crawl.blockedPages} danger={Boolean(metrics.crawl.blockedPages)} />
+      <Metric label="Sources reviewed" value={metrics.sources} note="Evidence inputs" />
+      <Metric label="Restricted reads" value={metrics.crawl.blockedPages} danger={Boolean(metrics.crawl.blockedPages)} note="Not recommendations" />
       <Metric label="Validation Errors" value={validationCount} danger={Boolean(validationCount)} />
     </section>
   );
@@ -403,26 +403,32 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
           <p className={metrics.crawl.blockedPages ? "readiness-note danger" : "readiness-note"}>
             {readinessNotation(metrics)}
           </p>
+          <p className="readiness-count-note">{recommendationCountNotation(metrics)}</p>
           <div className="readiness-facts">
             <div className="readiness-fact fact-total">
               <b>{metrics.recommendations}</b>
               <span>Total recommendations</span>
+              <small>Proposal tickets</small>
             </div>
             <div className="readiness-fact fact-ready">
               <b>{metrics.ready}</b>
               <span>Ready to send</span>
+              <small>Included in total</small>
             </div>
             <div className="readiness-fact fact-review">
               <b>{metrics.needsReview}</b>
               <span>Need review</span>
+              <small>Included in total</small>
             </div>
             <div className="readiness-fact fact-crawl">
               <b>{metrics.crawl.blockedPages}</b>
-              <span>403 / restricted reads</span>
+              <span>Restricted reads</span>
+              <small>Not in total</small>
             </div>
             <div className="readiness-fact fact-sources">
               <b>{metrics.sources}</b>
               <span>Sources reviewed</span>
+              <small>Evidence inputs</small>
             </div>
           </div>
         </div>
@@ -1792,11 +1798,12 @@ function KeyValueTable({ rows }) {
   );
 }
 
-function Metric({ label, value, danger = false }) {
+function Metric({ label, value, danger = false, note = "" }) {
   return (
-    <div className={danger ? "metric danger" : "metric"}>
+    <div className={danger ? "metric danger" : "metric"} title={note || undefined}>
       <span>{label}</span>
       <strong>{value}</strong>
+      {note ? <small>{note}</small> : null}
     </div>
   );
 }
@@ -1951,6 +1958,16 @@ function readinessNotation(metrics) {
     return `${scope}: ${metrics.crawl.blockedPages} of ${checkedPages} checked pages returned 403/restricted. Score includes -${metrics.crawl.penalty} crawlability penalty and caps at ${metrics.crawl.cap} until access is validated.`;
   }
   return "Score averages recommendation strength, then subtracts review, validation, and crawlability penalties.";
+}
+
+function recommendationCountNotation(metrics) {
+  const total = Number(metrics.recommendations || 0);
+  const ready = Number(metrics.ready || 0);
+  const needsReview = Number(metrics.needsReview || 0);
+  if (total === ready + needsReview) {
+    return `${total} recommendations = ${ready} ready to send + ${needsReview} need review. Restricted reads and sources reviewed are run context, not additional recommendations.`;
+  }
+  return `${total} recommendations are proposal tickets. Restricted reads and sources reviewed are run context, not additional recommendations.`;
 }
 
 function attentionRows(data) {

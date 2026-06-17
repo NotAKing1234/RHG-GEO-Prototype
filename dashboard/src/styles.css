@@ -327,6 +327,15 @@ textarea {
   line-height: 1;
 }
 
+.metric small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
 .metric.danger strong {
   color: var(--red);
 }
@@ -1707,6 +1716,14 @@ input {
   color: var(--red);
 }
 
+.readiness-panel .readiness-count-note {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  color: var(--muted);
+  font-weight: 650;
+}
+
 .readiness-facts {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1756,6 +1773,15 @@ input {
   color: var(--text);
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.25;
+}
+
+.readiness-facts small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
   line-height: 1.25;
 }
 
