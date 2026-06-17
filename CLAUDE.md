@@ -218,15 +218,15 @@ The final `--next` call automatically:
 Scraper:
 
 ```bash
-python scripts/scraper.py --run-dir runs/run_NNN_YYYY-MM-DD --run-id run_NNN --run-date YYYY-MM-DD
+python3 scripts/scraper.py --run-dir runs/run_NNN_YYYY-MM-DD --run-id run_NNN --run-date YYYY-MM-DD
 ```
 
-The scraper reads `sources/website/target_urls.md`, supports ZenRows via `ZENROWS_API_KEY`, supports ScrapingBee via `SCRAPINGBEE_API_KEY`, falls back to direct HTTP with rotating headers, extracts page metadata with BeautifulSoup when available, and writes `metadata_snapshot.md`.
+The runner passes the active target file to the scraper. If `sources/website/run_targets/next_geo_run.csv` has data rows, `run.py --next` uses that selected subset; otherwise it uses `sources/website/target_urls.md`. The scraper supports ZenRows via `ZENROWS_API_KEY`, supports ScrapingBee via `SCRAPINGBEE_API_KEY`, falls back to direct HTTP with rotating headers, delays between live target fetches, extracts page metadata with BeautifulSoup when available, and writes `metadata_snapshot.md`.
 
 Differ:
 
 ```bash
-python scripts/differ.py --current-run-dir runs/run_NNN_YYYY-MM-DD --run-id run_NNN --run-date YYYY-MM-DD
+python3 scripts/differ.py --current-run-dir runs/run_NNN_YYYY-MM-DD --run-id run_NNN --run-date YYYY-MM-DD
 ```
 
 The differ compares the current snapshot with the previous numbered run and writes `context_brief.md`.

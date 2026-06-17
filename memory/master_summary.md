@@ -1,6 +1,9 @@
 # GEO Optimizer — Master Summary
-Last updated: 2026-04-15
-Run count: 3 | Last run: run_003 (2026-04-15)
+Last updated: 2026-06-17
+Run count: 3 | Last completed GEO run: run_003 (2026-04-15)
+
+## Current System State
+The optimizer now has a sitemap-derived Radisson URL registry and dashboard selection flow. `sources/website/target_urls.md` is the canonical crawl inventory, `sources/website/radisson_url_registry.csv` is the machine-readable registry, and `sources/website/run_targets/next_geo_run.csv` is an optional active subset for the next `run.py --next` scrape when it contains data rows. Current crawl status must remain labeled `ready_with_known_gaps` until failed sitemaps and origin page metadata are verified from an approved environment.
 
 ## Implementation Patterns
 **26-day non-implementation confirmed (run_003).** First meaningful implementation window elapsed with zero observable changes. Pattern: proposals are not reaching decision-makers or there is an organizational barrier (WAF rules require security sign-off; content changes require marketing team approval). Future proposals must quantify revenue cost of delay and frame AI crawler fix as a business decision, not a technical adjustment.
@@ -33,7 +36,7 @@ Run count: 3 | Last run: run_003 (2026-04-15)
 - **Radisson:** Zero confirmed AI citations from own domain. Zero AI distribution channel. Zero schema. All 403-blocked.
 
 ## Gap Detection Logic — current version
-v3 (run_003): (a) Add standard Radisson brand page (/en-us/brand/radisson) to Priority 1 audit — currently missing from audit target list. (b) Add Booking.com amenity attribute completeness to OTA spot-check (not just review count). (c) Add GBP Q&A section check to property audit protocol. (d) Introduce implementation velocity tracking metric in context brief. (e) Track AI distribution gap separately in run index with per-path notation. (f) Weight TripAdvisor review *recency* (not just count) for Perplexity citation correlation.
+v4 (registry update): (a) Keep `/en-us/brand/radisson` in the active target inventory and verify through registry selection rather than manual list edits. (b) Preserve crawl provenance, location confidence, and known-gap state in registry-derived run selections. (c) Treat low-confidence locale fallback geography as a selection caveat, not confirmed destination geography. (d) Continue Booking.com amenity completeness checks, GBP Q&A checks, implementation velocity tracking, and separate AI distribution-gap tracking from run_003.
 
 ## Run Index Summary
 run_001 | 2026-03-20 | 25 gaps (baseline) | 0 implemented | key theme: schema + FAQ absence; marketing register systemic gap

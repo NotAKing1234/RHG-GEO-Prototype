@@ -489,7 +489,7 @@ def registry_payload(filters: dict[str, str], *, limit: int = 250, offset: int =
     selected_rows = read_next_geo_run_rows()
     selected_urls = {selected_url_key(row) for row in selected_rows}
     for row in filtered:
-        row["selected_for_next_run"] = "true" if row.get("normalized_url") in selected_urls else row.get("selected_for_next_run", "false")
+        row["selected_for_next_run"] = "true" if selected_url_key(row) in selected_urls else row.get("selected_for_next_run", "false")
     return {
         "registry_path": rel(URL_REGISTRY_CSV),
         "next_run_path": rel(NEXT_GEO_RUN_CSV),
@@ -2214,8 +2214,9 @@ def latest_run_id() -> str:
 
 
 def main() -> int:
-    server = ThreadingHTTPServer(("127.0.0.1", 8787), Handler)
-    print("Dashboard API listening at http://127.0.0.1:8787")
+    port = int(os.getenv("GEO_DASHBOARD_PORT") or os.getenv("PORT") or "8787")
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    print(f"Dashboard API listening at http://127.0.0.1:{port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

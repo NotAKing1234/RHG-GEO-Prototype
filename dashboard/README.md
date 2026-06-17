@@ -25,9 +25,20 @@ Open `http://127.0.0.1:5173`.
 
 The dashboard calls the existing runner from the repository root:
 
-- `python run.py --init`
-- `python run.py --status`
-- `python run.py --next`
-- `python run.py --next --skip-scrape`
+- `python3 run.py --init`
+- `python3 run.py --status`
+- `python3 run.py --next`
+- `python3 run.py --next --skip-scrape`
 
-It reads existing artifacts from `runs/`, `memory/`, `framework/`, and `literature/`. The only editable source in v1 is `sources/website/target_urls.md`.
+It reads existing artifacts from `runs/`, `memory/`, `framework/`, and `literature/`.
+
+Editable or generated operator inputs:
+
+- `sources/website/target_urls.md` via the target editor.
+- `sources/website/radisson_url_registry.csv` via the URL Registry view.
+- `sources/website/run_targets/next_geo_run.csv` when a URL Registry selection is saved for the next run.
+
+The backend also exposes:
+
+- `GET /api/url-registry` for registry filtering, cost estimates, and current next-run selection state.
+- `POST /api/url-registry/selection` for saving explicit checked URLs or a bounded filtered subset.
