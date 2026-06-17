@@ -2340,7 +2340,11 @@ input {
 
 .filter-panel {
   grid-template-columns: minmax(240px, 1.4fr) repeat(2, minmax(120px, 1fr));
+  align-self: start;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 12px;
+  row-gap: 10px;
   padding: 0 0 20px;
   border: 0;
   border-bottom: 1px solid var(--line);
