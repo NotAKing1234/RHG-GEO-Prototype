@@ -734,6 +734,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--previous-snapshot", help="Previous run metadata snapshot for mock outlines.")
     parser.add_argument("--summary-json", help="Optional path for machine-readable scrape summary.")
     parser.add_argument("--timeout", type=int, default=25, help="HTTP timeout in seconds.")
+    parser.add_argument("--delay-seconds", type=float, default=1.0, help="Delay between live target fetches.")
     parser.add_argument("--skip-scrape", action="store_true", help="Generate mock snapshot outlines instead of fetching.")
     return parser
 
@@ -762,6 +763,8 @@ def main(argv: list[str] | None = None) -> int:
             logging.info("[%s/%s] Fetching %s", index, len(targets), target.source_url)
             result = scrape_page(target.source_url, args.timeout)
             pages.append(metadata_from_fetch(target, result))
+            if args.delay_seconds > 0 and index < len(targets):
+                time.sleep(args.delay_seconds)
 
     write_snapshot(pages, output_path, args.run_id, args.run_date, args.skip_scrape)
     summary = summarize_pages(pages, output_path)

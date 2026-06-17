@@ -31,6 +31,7 @@ RUN_INDEX = REPO_ROOT / "memory" / "run_index.md"
 TARGET_URLS = REPO_ROOT / "sources" / "website" / "target_urls.md"
 URL_REGISTRY_CSV = REPO_ROOT / "sources" / "website" / "radisson_url_registry.csv"
 NEXT_GEO_RUN_CSV = REPO_ROOT / "sources" / "website" / "run_targets" / "next_geo_run.csv"
+MAX_ACTIVE_TARGETS_FOR_RUN_SCOPE = 500
 
 ARTIFACT_NAMES = [
     "metadata_snapshot.md",
@@ -366,6 +367,35 @@ def read_url_registry() -> list[dict[str, Any]]:
         return list(csv.DictReader(fh))
 
 
+def read_url_registry_fieldnames() -> list[str]:
+    if not URL_REGISTRY_CSV.exists():
+        return []
+    with URL_REGISTRY_CSV.open(encoding="utf-8", newline="") as fh:
+        reader = csv.reader(fh)
+        return next(reader, [])
+
+
+def registry_field_value(row: dict[str, Any], field: str) -> str:
+    return row.get(field) or "Unspecified"
+
+
+def selected_url_key(row: dict[str, Any]) -> str:
+    return row.get("normalized_url") or row.get("canonical_url") or row.get("url") or ""
+
+
+def parse_nonnegative_int(value: str, default: int, maximum: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(0, min(parsed, maximum))
+
+
+def has_active_registry_filter(filters: dict[str, str]) -> bool:
+    exact_fields = ["brand", "region", "country", "locale", "page_type", "content_group", "location_confidence"]
+    return bool(filters.get("query")) or any(filters.get(field, "all") != "all" for field in exact_fields)
+
+
 def registry_filter_from_query(query: dict[str, list[str]]) -> dict[str, str]:
     return {
         "query": query.get("query", [""])[0].strip(),
@@ -402,7 +432,7 @@ def filter_registry_rows(rows: list[dict[str, Any]], filters: dict[str, str]) ->
     exact_fields = ["brand", "region", "country", "locale", "page_type", "content_group", "location_confidence"]
     filtered: list[dict[str, Any]] = []
     for row in rows:
-        if any(filters.get(field, "all") != "all" and row.get(field) != filters[field] for field in exact_fields):
+        if any(filters.get(field, "all") != "all" and registry_field_value(row, field) != filters[field] for field in exact_fields):
             continue
         if query:
             haystack = " ".join(
@@ -421,7 +451,7 @@ def registry_options(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any
     for field in option_fields:
         counts: dict[str, int] = {}
         for row in rows:
-            value = row.get(field) or "Unspecified"
+            value = registry_field_value(row, field)
             counts[value] = counts.get(value, 0) + 1
         options[field] = [
             {"value": value, "label": value, "count": count}
@@ -457,7 +487,7 @@ def registry_payload(filters: dict[str, str], *, limit: int = 250, offset: int =
     rows = read_url_registry()
     filtered = filter_registry_rows(rows, filters)
     selected_rows = read_next_geo_run_rows()
-    selected_urls = {row.get("normalized_url") or row.get("canonical_url") or row.get("url") for row in selected_rows}
+    selected_urls = {selected_url_key(row) for row in selected_rows}
     for row in filtered:
         row["selected_for_next_run"] = "true" if row.get("normalized_url") in selected_urls else row.get("selected_for_next_run", "false")
     return {
@@ -486,7 +516,7 @@ def read_next_geo_run_rows() -> list[dict[str, Any]]:
 
 def write_next_geo_run(rows: list[dict[str, Any]]) -> None:
     NEXT_GEO_RUN_CSV.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(rows[0].keys()) if rows else [
+    fieldnames = list(rows[0].keys()) if rows else read_url_registry_fieldnames() or [
         "url",
         "canonical_url",
         "normalized_url",
@@ -507,18 +537,27 @@ def write_next_geo_run(rows: list[dict[str, Any]]) -> None:
 def save_registry_selection(payload: dict[str, Any]) -> dict[str, Any]:
     rows = read_url_registry()
     filters = registry_filter_from_payload(payload)
+    has_explicit_selection = "selected_urls" in payload
     explicit_urls = set(str(url) for url in payload.get("selected_urls", []) if url)
-    if explicit_urls:
+    if has_explicit_selection:
         selected = [
             row for row in rows
-            if (row.get("normalized_url") or row.get("canonical_url") or row.get("url")) in explicit_urls
+            if selected_url_key(row) in explicit_urls
         ]
     else:
+        if not has_active_registry_filter(filters):
+            raise ValueError("Refusing to save the entire registry as the next run. Choose filters or selected URLs first.")
         selected = filter_registry_rows(rows, filters)
+        if len(selected) > MAX_ACTIVE_TARGETS_FOR_RUN_SCOPE and not payload.get("confirm_large_selection"):
+            raise ValueError(
+                f"Selection contains {len(selected)} URLs. Refusing to write more than "
+                f"{MAX_ACTIVE_TARGETS_FOR_RUN_SCOPE} without confirm_large_selection=true."
+            )
     write_next_geo_run(selected)
     return {
         "next_run_path": rel(NEXT_GEO_RUN_CSV),
         "selected_count": len(selected),
+        "selection_mode": "explicit_urls" if has_explicit_selection else "filters",
         "filters": filters,
         "cost_estimate": estimate_registry_cost(len(selected), filters.get("audit_profile", "metadata_light"), filters.get("model", "gpt-5.4-mini")),
     }
@@ -541,7 +580,7 @@ def artifact_paths(run: dict[str, Any]) -> dict[str, Path]:
 
 def parse_metadata_snapshot(text: str) -> dict[str, dict[str, Any]]:
     pages: dict[str, dict[str, Any]] = {}
-    for section in split_heading_sections(text, r"##\s+Page\s+\d+:"):
+    for section in split_heading_sections(text, r"##\s+Page\s+\d+(?:\s*\([^)]*\))?:"):
         url = field_value(section, "URL")
         if not url:
             heading_url = urls_in(section.splitlines()[0] if section.splitlines() else "")
@@ -571,6 +610,71 @@ def parse_metadata_snapshot(text: str) -> dict[str, dict[str, Any]]:
             "raw_excerpt": section[:6000],
         }
     return pages
+
+
+def metadata_pages_audited_count(snapshot_text: str, metadata_pages: dict[str, dict[str, Any]]) -> int:
+    value = field_value(snapshot_text, "Pages audited")
+    if value:
+        numeric = re.match(r"\s*(\d+)\s*$", value)
+        if numeric:
+            return int(numeric.group(1))
+    return len(metadata_pages)
+
+
+def recommendation_page_refs(recommendations: list[dict[str, Any]]) -> set[str]:
+    refs: set[str] = set()
+    for rec in recommendations:
+        for ref in rec.get("page_refs", []) or []:
+            if isinstance(ref, str) and ref.startswith("http"):
+                refs.add(canonicalize_url(ref))
+    return refs
+
+
+def scoped_run_targets(
+    targets: list[dict[str, Any]],
+    metadata_pages: dict[str, dict[str, Any]],
+    recommendations: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    scope = {
+        "active_target_count": len(targets),
+        "metadata_page_count": len(metadata_pages),
+        "scoped_from_large_active_target_file": False,
+    }
+    if len(targets) <= MAX_ACTIVE_TARGETS_FOR_RUN_SCOPE or not metadata_pages:
+        scope["dashboard_target_count"] = len(targets)
+        return targets, scope
+
+    wanted = set(metadata_pages) | recommendation_page_refs(recommendations)
+    scoped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for target in targets:
+        canonical = target.get("canonical_url") or ""
+        if canonical in wanted and canonical not in seen:
+            scoped.append(target)
+            seen.add(canonical)
+    for canonical, snapshot in metadata_pages.items():
+        if canonical in seen:
+            continue
+        scoped.append(
+            {
+                "source_url": snapshot.get("source_url") or canonical,
+                "canonical_url": canonical,
+                "registry_priority": snapshot.get("priority") or "From metadata snapshot",
+                "line_number": None,
+            }
+        )
+        seen.add(canonical)
+    scope.update(
+        {
+            "dashboard_target_count": len(scoped),
+            "scoped_from_large_active_target_file": True,
+            "scope_note": (
+                "Active target file looked like a full registry export; dashboard pages were scoped "
+                "to metadata snapshot pages and proposal-linked URLs for this run."
+            ),
+        }
+    )
+    return scoped, scope
 
 
 def parse_criteria(text: str) -> dict[str, dict[str, Any]]:
@@ -1155,7 +1259,8 @@ def build_dashboard_data(run_id: str, record_history: bool = True) -> dict[str, 
 
     paths = artifact_paths(run)
     targets, target_issues = parse_target_urls()
-    metadata_pages = parse_metadata_snapshot(read_text(paths["metadata_snapshot"]))
+    metadata_snapshot_text = read_text(paths["metadata_snapshot"])
+    metadata_pages = parse_metadata_snapshot(metadata_snapshot_text)
     criteria = parse_criteria(read_text(paths["criteria_framework"]))
     gaps = parse_gaps(read_text(paths["gap_analysis"]))
     research = parse_gap_research(read_text(paths["gap_research"]))
@@ -1164,7 +1269,10 @@ def build_dashboard_data(run_id: str, record_history: bool = True) -> dict[str, 
     recommendations, copy_blocks, additional_sources = build_recommendations(proposals, gaps, research, criteria, sources)
     sources.update(additional_sources)
     run_dir = REPO_ROOT / str(run["run_dir"])
-    pages = build_pages(targets, metadata_pages, recommendations, run_dir)
+    scoped_targets, run_scope = scoped_run_targets(targets, metadata_pages, recommendations)
+    pages = build_pages(scoped_targets, metadata_pages, recommendations, run_dir)
+    pages_audited = metadata_pages_audited_count(metadata_snapshot_text, metadata_pages)
+    run_scope["pages_audited"] = pages_audited
     metadata_changes = build_metadata_changes(recommendations, pages)
     data = {
         "schema_version": "geo_dashboard.v1",
@@ -1175,6 +1283,7 @@ def build_dashboard_data(run_id: str, record_history: bool = True) -> dict[str, 
             "previous_run_id": previous_run_id(run_id),
             "imported_at": datetime.now().isoformat(timespec="seconds"),
             "source_files": {key: rel(path) for key, path in paths.items()},
+            "scope": run_scope,
             "validation_errors": [],
         },
         "radisson_pages": pages,
@@ -1194,7 +1303,7 @@ def build_dashboard_data(run_id: str, record_history: bool = True) -> dict[str, 
             }
         ],
         "summary": {
-            "pages": len(pages),
+            "pages": pages_audited or len(pages),
             "sources": len(sources),
             "criteria": len(criteria),
             "gaps": len(gaps),
@@ -1491,7 +1600,7 @@ def jira_story_row(
     summary = jira_summary({"title": draft.get("summary") or rec.get("title") or rec.get("proposal_id")})
     target_url_text = ", ".join(target_urls) or ", ".join(rec.get("page_refs", []) or []) or "[NEEDED: target URL]"
     required_change = rec.get("proposed_change") or "[NEEDED: recommended change]"
-    developer_change_specs = [
+    generated_developer_change_specs = [
         f"Change type: {proposal_type}",
         f"Page type: {page_type}",
         f"Target component: {target_component or '[NEEDED: target component]'}",
@@ -1502,11 +1611,12 @@ def jira_story_row(
         f"Evidence sources: {', '.join(rec.get('evidence_source_ids', [])) or 'None linked'}",
     ]
     if proposed_value and clean_inline(proposed_value) != clean_inline(required_change):
-        developer_change_specs.insert(6, f"Proposed value/state: {proposed_value}")
+        generated_developer_change_specs.insert(6, f"Proposed value/state: {proposed_value}")
+    developer_change_specs = draft.get("developer_change_spec") or generated_developer_change_specs
     validation_steps = draft.get("validation_steps") or build_jira_validation_steps(proposal_type, target_urls[0] if target_urls else "")
     acceptance_criteria = draft.get("acceptance_criteria") or build_jira_acceptance_criteria(proposal_type)
     seo_rationale = build_jira_seo_rationale(proposal_type)
-    description = " ".join(
+    generated_description = " ".join(
         [
             jira_section_text("Dev change specs", developer_change_specs),
             jira_section_text("SEO/GEO rationale", [seo_rationale]),
@@ -1521,6 +1631,7 @@ def jira_story_row(
             ),
         ]
     )
+    description = draft.get("description") or generated_description
 
     return {
         "Issue Type": "Story",
@@ -1997,8 +2108,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"runs": get_runs()})
             elif path == "/api/url-registry":
                 filters = registry_filter_from_query(query)
-                limit = int(query.get("limit", ["250"])[0] or 250)
-                offset = int(query.get("offset", ["0"])[0] or 0)
+                limit = parse_nonnegative_int(query.get("limit", ["250"])[0], 250, 1000)
+                offset = parse_nonnegative_int(query.get("offset", ["0"])[0], 0, 1_000_000)
                 self.send_json(registry_payload(filters, limit=limit, offset=offset))
             elif path == "/api/targets":
                 self.send_json({"path": rel(TARGET_URLS), "content": TARGET_URLS.read_text(encoding="utf-8")})

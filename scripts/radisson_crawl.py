@@ -80,6 +80,7 @@ class UrlRef:
     source_sitemap: str
     source_sitemap_lastmod: str
     source_sitemap_reader_status: int | None
+    source_type: str = "sitemap"
 
 
 def utc_now() -> str:
@@ -178,7 +179,7 @@ def fetch_reader_with_retries(url: str, *, timeout: int, retries: int, backoff_s
     for origin in origins:
         last = fetch(url, method="GET", timeout=timeout, reader=True, reader_source_url=origin)
         for attempt in range(1, attempts):
-            if last.status not in {429, 503, 524}:
+            if last.status not in {422, 429, 503, 524}:
                 break
             time.sleep(backoff_seconds * attempt)
             last = fetch(url, method="GET", timeout=timeout, reader=True, reader_source_url=origin)
@@ -367,9 +368,11 @@ def build_url_record(
     parsed = urllib.parse.urlsplit(normalized_url)
     group = infer_content_group(ref.source_sitemap)
     locale = locale_from_url(normalized_url)
+    sitemap_listed = ref.source_type == "sitemap"
+    source_note = "URL is verified as sitemap-listed." if sitemap_listed else "URL is the approved seed homepage."
     status_note = (
         "Origin page was not fetched from this environment; Radisson origin returned access-restricted "
-        "403 to direct automation during robots/sitemap probing. URL is verified as sitemap-listed."
+        f"403 to direct automation during robots/sitemap probing. {source_note}"
     )
     return {
         "url": ref.url,
@@ -384,12 +387,12 @@ def build_url_record(
         "source_sitemap_lastmod": ref.source_sitemap_lastmod,
         "sitemap_lastmod": ref.lastmod,
         "date_discovered": discovered_at,
-        "crawl_depth": 2,
+        "crawl_depth": 2 if sitemap_listed else 0,
         "http_status": None,
         "http_status_note": status_note,
         "origin_probe_status_for_seed_domain": direct_origin_status,
         "source_sitemap_reader_status": ref.source_sitemap_reader_status,
-        "fetch_status": "DISCOVERED_FROM_OFFICIAL_SITEMAP",
+        "fetch_status": "DISCOVERED_FROM_OFFICIAL_SITEMAP" if sitemap_listed else "ADDED_FROM_APPROVED_SEED_DOMAIN",
         "content_type": infer_content_type(normalized_url, group),
         "last_modified": ref.lastmod or ref.source_sitemap_lastmod,
         "crawl_method": "robots_and_sitemap_reader_snapshot",
@@ -399,7 +402,12 @@ def build_url_record(
             "robots_url": ROBOTS_URL,
             "sitemap_index_url": SITEMAP_INDEX_URL,
             "source_sitemap": ref.source_sitemap,
-            "source_authority": "Radisson robots.txt sitemap declaration and Radisson sitemap index",
+            "source_type": ref.source_type,
+            "source_authority": (
+                "Radisson robots.txt sitemap declaration and Radisson sitemap index"
+                if sitemap_listed else
+                "Approved seed domain configured for the crawl"
+            ),
             "reader_service": "https://r.jina.ai/",
         },
     }
@@ -718,6 +726,7 @@ def run(args: argparse.Namespace) -> int:
         source_sitemap=SITEMAP_INDEX_URL,
         source_sitemap_lastmod=reader_sitemap_index.published_time,
         source_sitemap_reader_status=reader_sitemap_index.status,
+        source_type="seed_homepage",
     )
     url_refs.append(primary_root)
 
@@ -886,7 +895,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Directory for crawl deliverables.")
     parser.add_argument("--timeout", type=int, default=60, help="HTTP timeout per robots/sitemap fetch.")
     parser.add_argument("--delay-seconds", type=float, default=0.75, help="Delay between sitemap reader requests.")
-    parser.add_argument("--retries", type=int, default=2, help="Retries for HTTP 429 reader responses.")
+    parser.add_argument("--retries", type=int, default=2, help="Retries for transient reader responses: HTTP 422, 429, 503, and 524.")
     parser.add_argument("--retry-backoff-seconds", type=float, default=5.0, help="Linear backoff base for 429 retries.")
     parser.add_argument("--no-reuse-cache", action="store_true", help="Refetch all sitemap files instead of reusing prior successful raw snapshots.")
     parser.add_argument("--include-media-sitemaps", action="store_true", help="Include image, video, and PDF sitemaps.")

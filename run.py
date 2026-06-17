@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import logging
 import re
@@ -327,8 +328,17 @@ def run_subprocess(command: list[str]) -> None:
     subprocess.run(command, cwd=ROOT, check=True)
 
 
+def csv_has_data_rows(path: Path) -> bool:
+    if not path.exists() or path.stat().st_size == 0:
+        return False
+    with path.open(encoding="utf-8", newline="") as fh:
+        reader = csv.reader(fh)
+        next(reader, None)
+        return any(any(cell.strip() for cell in row) for row in reader)
+
+
 def active_targets_path() -> Path:
-    if RUN_TARGETS_CSV.exists() and RUN_TARGETS_CSV.stat().st_size > 0:
+    if csv_has_data_rows(RUN_TARGETS_CSV):
         return RUN_TARGETS_CSV
     return TARGET_URLS
 

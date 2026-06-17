@@ -137,11 +137,17 @@ REGISTRY_FIELDS = [
     "hotel_slug",
     "source_domain",
     "source_sitemap",
+    "source_sitemap_reader_status",
     "sitemap_lastmod",
     "date_discovered",
     "crawl_depth",
+    "http_status",
+    "http_status_note",
     "content_type",
     "last_modified",
+    "crawl_method",
+    "user_agent_identifier",
+    "provenance",
     "selected_for_next_run",
     "priority",
 ]
@@ -342,11 +348,17 @@ def registry_row(record: dict[str, Any]) -> dict[str, Any]:
         "hotel_slug": hotel_slug,
         "source_domain": record.get("source_domain") or "",
         "source_sitemap": record.get("source_sitemap") or "",
+        "source_sitemap_reader_status": record.get("source_sitemap_reader_status") or "",
         "sitemap_lastmod": record.get("sitemap_lastmod") or "",
         "date_discovered": record.get("date_discovered") or "",
         "crawl_depth": record.get("crawl_depth") or "",
+        "http_status": record.get("http_status") if record.get("http_status") is not None else "",
+        "http_status_note": record.get("http_status_note") or "",
         "content_type": record.get("content_type") or "",
         "last_modified": record.get("last_modified") or "",
+        "crawl_method": record.get("crawl_method") or "",
+        "user_agent_identifier": record.get("user_agent_identifier") or "",
+        "provenance": json.dumps(record.get("provenance") or {}, ensure_ascii=False, sort_keys=True),
         "selected_for_next_run": "false",
         "priority": "",
     }
@@ -383,9 +395,18 @@ def write_ingestion_manifest(
         for item in crawl_manifest.get("sitemap_fetches", [])
         if item.get("reader_status") != 200
     ]
+    origin_metadata_verified = bool(crawl_manifest.get("origin_metadata_verified"))
+    known_gaps = {
+        "failed_sitemaps": failed_sitemaps,
+        "origin_metadata_gap": (
+            "" if origin_metadata_verified else
+            "Direct Radisson origin fetches returned access-restricted 403 from this environment; "
+            "per-page origin HTTP status, canonical link tags, and content-type headers remain unverified."
+        ),
+    }
     payload = {
         "generated_at": utc_now(),
-        "status": "ready_with_known_gaps" if failed_sitemaps else "ready",
+        "status": "ready" if not failed_sitemaps and origin_metadata_verified else "ready_with_known_gaps",
         "crawl_dir": rel(crawl_dir),
         "dataset": {
             "jsonl": rel(crawl_dir / "radisson_url_index.jsonl"),
@@ -400,7 +421,7 @@ def write_ingestion_manifest(
         "canonical_target_file": {
             "path": rel(DEFAULT_ACTIVE_TARGETS),
             "source": rel(crawl_dir / "target_urls_discovered.md"),
-            "activation_command": "python scripts/ingest_radisson_crawl.py --activate-targets",
+            "activation_command": "python3 scripts/ingest_radisson_crawl.py --activate-targets",
             "backup_created": active_targets_backup,
         },
         "run_selection": {
@@ -410,13 +431,7 @@ def write_ingestion_manifest(
         },
         "validation": validation,
         "crawl_counts": crawl_manifest.get("counts", {}),
-        "known_gaps": {
-            "failed_sitemaps": failed_sitemaps,
-            "origin_metadata_gap": (
-                "Direct Radisson origin fetches returned access-restricted 403 from this environment; "
-                "per-page origin HTTP status, canonical link tags, and content-type headers remain unverified."
-            ),
-        },
+        "known_gaps": known_gaps,
         "field_contract": sorted(REQUIRED_FIELDS),
         "record_count": len(records),
         "registry_record_count": len(registry_rows),

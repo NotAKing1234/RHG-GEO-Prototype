@@ -32,6 +32,7 @@ import "./styles.css";
 const VIEWS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "recommendations", label: "Signal Console", icon: SlidersHorizontal },
+  { id: "registry", label: "URL Registry", icon: Database },
   { id: "pages", label: "Radisson Pages", icon: Globe2 },
   { id: "sources", label: "Sources", icon: BookOpen },
   { id: "metadata", label: "Metadata", icon: Table2 },
@@ -46,6 +47,21 @@ const DEFAULT_FILTERS = {
   evidence: "all",
   page: "all"
 };
+
+const REGISTRY_DEFAULT_FILTERS = {
+  query: "",
+  brand: "all",
+  region: "all",
+  country: "all",
+  locale: "all",
+  page_type: "all",
+  content_group: "all",
+  location_confidence: "all",
+  audit_profile: "metadata_light",
+  model: "gpt-5.4-mini"
+};
+
+const REGISTRY_PAGE_SIZE = 100;
 
 const CRAWL_BLOCKED_PATTERN = /\b403\b|blocked|access restricted|temporarily restricted/i;
 const SELECTOR_WARNING_HELP =
@@ -112,6 +128,10 @@ function App() {
   const [runs, setRuns] = useState([]);
   const [selectedRunId, setSelectedRunId] = usePersistentState("geo:selectedRunId", "");
   const [filters, setFilters] = usePersistentObject("geo:filters", DEFAULT_FILTERS);
+  const [registryFilters, setRegistryFilters] = usePersistentObject("geo:registryFilters", REGISTRY_DEFAULT_FILTERS);
+  const [registryOffset, setRegistryOffset] = useState(0);
+  const [registryData, setRegistryData] = useState(null);
+  const [registrySelectedUrls, setRegistrySelectedUrls] = useState([]);
   const [data, setData] = useState(null);
   const [selectedRecommendationId, setSelectedRecommendationId] = useState("");
   const [selectedPageUrl, setSelectedPageUrl] = useState("");
@@ -134,6 +154,12 @@ function App() {
       loadDashboard(selectedRunId);
     }
   }, [selectedRunId]);
+
+  useEffect(() => {
+    if (view === "registry") {
+      loadRegistry(registryFilters, registryOffset);
+    }
+  }, [view, registryFilters, registryOffset]);
 
   async function loadRuns() {
     setError("");
@@ -202,6 +228,46 @@ function App() {
         override
       });
       setData(payload);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function loadRegistry(nextFilters = registryFilters, nextOffset = registryOffset) {
+    setBusy("registry");
+    setError("");
+    try {
+      const query = new URLSearchParams({
+        ...nextFilters,
+        limit: String(REGISTRY_PAGE_SIZE),
+        offset: String(nextOffset)
+      });
+      const payload = await api.get(`/api/url-registry?${query.toString()}`);
+      setRegistryData(payload);
+      setRegistrySelectedUrls(
+        (payload.rows || [])
+          .filter((row) => row.selected_for_next_run === "true")
+          .map((row) => registryRowKey(row))
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function saveRegistrySelection(mode) {
+    setBusy(`registry:${mode}`);
+    setError("");
+    try {
+      const payload = mode === "checked"
+        ? { selected_urls: registrySelectedUrls, filters: registryFilters }
+        : { filters: registryFilters };
+      const saved = await api.post("/api/url-registry/selection", payload);
+      await loadRegistry(registryFilters, registryOffset);
+      setRegistryData((current) => ({ ...(current || {}), last_save: saved }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -328,6 +394,23 @@ function App() {
                   busy={busy}
                 />
               </>
+            )}
+            {view === "registry" && (
+              <RegistryView
+                data={registryData}
+                filters={registryFilters}
+                setFilters={(nextFilters) => {
+                  setRegistryFilters(nextFilters);
+                  setRegistryOffset(0);
+                }}
+                offset={registryOffset}
+                setOffset={setRegistryOffset}
+                selectedUrls={registrySelectedUrls}
+                setSelectedUrls={setRegistrySelectedUrls}
+                reload={() => loadRegistry(registryFilters, registryOffset)}
+                saveSelection={saveRegistrySelection}
+                busy={busy}
+              />
             )}
             {view === "pages" && (
               <PagesView
@@ -518,7 +601,7 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
 }
 
 const COVERAGE_DEFINITIONS = [
-  ["Pages", "Audited Radisson URLs included in the current run."],
+  ["Pages in run", "Radisson URLs included in the selected audit run. This excludes the full URL registry unless those URLs were actually selected for the run."],
   ["Metadata", "Title, meta description, and related head fields reviewed or proposed for update."],
   ["Schema", "Recommendations involving structured data, JSON-LD, or machine-readable entity signals."],
   ["Copy", "Generated page, metadata, schema, and ticket-ready copy blocks available for handoff."],
@@ -672,6 +755,167 @@ function FilterBar({ data, filters, setFilters }) {
         </select>
       </label>
     </div>
+  );
+}
+
+function RegistryView({ data, filters, setFilters, offset, setOffset, selectedUrls, setSelectedUrls, reload, saveSelection, busy }) {
+  const rows = data?.rows || [];
+  const options = data?.options || {};
+  const cost = data?.cost_estimate || {};
+  const selectedSet = useMemo(() => new Set(selectedUrls), [selectedUrls]);
+  const visibleKeys = rows.map(registryRowKey);
+  const visibleSelectedCount = visibleKeys.filter((key) => selectedSet.has(key)).length;
+  const allVisibleSelected = visibleKeys.length > 0 && visibleSelectedCount === visibleKeys.length;
+  const activeFilters = registryActiveFilterCount(filters);
+  const nextOffset = Math.min((data?.filtered_count || 0), offset + REGISTRY_PAGE_SIZE);
+  const canPageBack = offset > 0;
+  const canPageForward = offset + REGISTRY_PAGE_SIZE < (data?.filtered_count || 0);
+
+  function update(key, value) {
+    setFilters({ ...filters, [key]: value });
+  }
+
+  function toggleRow(row) {
+    const key = registryRowKey(row);
+    const next = new Set(selectedSet);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    setSelectedUrls([...next]);
+  }
+
+  function toggleVisibleRows() {
+    const next = new Set(selectedSet);
+    if (allVisibleSelected) {
+      visibleKeys.forEach((key) => next.delete(key));
+    } else {
+      visibleKeys.forEach((key) => next.add(key));
+    }
+    setSelectedUrls([...next]);
+  }
+
+  return (
+    <section className="registry-workspace">
+      <div className="panel registry-control-panel">
+        <PanelHeader icon={Database} label="Next run selection" title="URL Registry" />
+        <div className="registry-stats">
+          <Metric label="Registry URLs" value={data?.total_records ?? "–"} />
+          <Metric label="Filtered URLs" value={data?.filtered_count ?? "–"} note={`${activeFilters} active filters`} />
+          <Metric label="Current next run" value={data?.selected_count ?? "–"} note={data?.next_run_path || ""} />
+          <Metric label="Est. cost" value={cost.total_cost_usd != null ? `$${cost.total_cost_usd}` : "–"} note={`${cost.total_tokens || 0} tokens`} />
+        </div>
+        {data?.last_save && (
+          <div className="inline-notice">
+            <CheckCircle2 size={16} />
+            <span>Saved {data.last_save.selected_count} URLs to {data.last_save.next_run_path}.</span>
+          </div>
+        )}
+        <div className="registry-filters">
+          <label className="search-box">
+            <Search size={17} />
+            <input value={filters.query} onChange={(event) => update("query", event.target.value)} placeholder="Search URL, hotel, brand, country, page type" />
+          </label>
+          <RegistrySelect label="Brand" value={filters.brand} options={options.brand} onChange={(value) => update("brand", value)} />
+          <RegistrySelect label="Region" value={filters.region} options={options.region} onChange={(value) => update("region", value)} />
+          <RegistrySelect label="Country" value={filters.country} options={options.country} onChange={(value) => update("country", value)} />
+          <RegistrySelect label="Locale" value={filters.locale} options={options.locale} onChange={(value) => update("locale", value)} />
+          <RegistrySelect label="Page type" value={filters.page_type} options={options.page_type} onChange={(value) => update("page_type", value)} />
+          <RegistrySelect label="Group" value={filters.content_group} options={options.content_group} onChange={(value) => update("content_group", value)} />
+          <RegistrySelect label="Confidence" value={filters.location_confidence} options={options.location_confidence} onChange={(value) => update("location_confidence", value)} />
+          <label>
+            Audit profile
+            <select value={filters.audit_profile} onChange={(event) => update("audit_profile", event.target.value)}>
+              {Object.entries(data?.audit_profiles || {}).map(([id, profile]) => <option key={id} value={id}>{profile.label}</option>)}
+            </select>
+          </label>
+          <label>
+            Model
+            <select value={filters.model} onChange={(event) => update("model", event.target.value)}>
+              {Object.keys(data?.model_prices_per_million || {}).map((id) => <option key={id} value={id}>{id}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="button-row">
+          <button className="secondary-button" onClick={reload} disabled={busy === "registry"}>
+            {busy === "registry" ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
+            <span>Refresh</span>
+          </button>
+          <button className="secondary-button" onClick={() => setFilters(REGISTRY_DEFAULT_FILTERS)}>
+            <XCircle size={16} />
+            <span>Clear filters</span>
+          </button>
+          <button className="secondary-button" onClick={() => saveSelection("checked")} disabled={busy === "registry:checked"}>
+            {busy === "registry:checked" ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+            <span>Save checked visible ({selectedUrls.length})</span>
+          </button>
+          <button className="primary-button" onClick={() => saveSelection("filtered")} disabled={!activeFilters || busy === "registry:filtered"}>
+            {busy === "registry:filtered" ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+            <span>Save filtered subset</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="panel registry-table-panel">
+        <div className="registry-table-header">
+          <div>
+            <p className="eyeline">Visible rows {offset + 1}-{Math.min(offset + rows.length, data?.filtered_count || 0)}</p>
+            <h3>{data?.filtered_count || 0} registry URLs</h3>
+          </div>
+          <div className="button-row">
+            <button className="secondary-button" onClick={toggleVisibleRows} disabled={!rows.length}>
+              <CheckCircle2 size={16} />
+              <span>{allVisibleSelected ? "Clear visible" : "Select visible"}</span>
+            </button>
+            <button className="secondary-button" onClick={() => setOffset(Math.max(0, offset - REGISTRY_PAGE_SIZE))} disabled={!canPageBack}>Previous</button>
+            <button className="secondary-button" onClick={() => setOffset(nextOffset)} disabled={!canPageForward}>Next</button>
+          </div>
+        </div>
+        <div className="registry-table" role="table" aria-label="Radisson URL registry">
+          <div className="registry-row registry-head" role="row">
+            <span role="columnheader">Run</span>
+            <span role="columnheader">URL</span>
+            <span role="columnheader">Brand</span>
+            <span role="columnheader">Market</span>
+            <span role="columnheader">Type</span>
+            <span role="columnheader">Confidence</span>
+          </div>
+          {rows.map((row) => {
+            const key = registryRowKey(row);
+            return (
+              <div key={key} className="registry-row" role="row">
+                <label className="registry-check">
+                  <input type="checkbox" checked={selectedSet.has(key)} onChange={() => toggleRow(row)} />
+                </label>
+                <span className="registry-url"><strong>{shortUrl(key)}</strong><small>{row.source_sitemap || "No sitemap provenance"}</small></span>
+                <span>{row.brand || "Unspecified"}</span>
+                <span>{[row.country || "Unspecified", row.region || "Unspecified", row.locale || "No locale"].join(" · ")}</span>
+                <span>{[row.page_type || "Unspecified", row.content_group || ""].filter(Boolean).join(" · ")}</span>
+                <span><Tag warn={row.location_confidence === "low"}>{row.location_source || "unknown"} · {row.location_confidence || "unknown"}</Tag></span>
+              </div>
+            );
+          })}
+        </div>
+        {!rows.length && <p className="empty-text">No registry URLs match the current filters.</p>}
+      </div>
+    </section>
+  );
+}
+
+function RegistrySelect({ label, value, options = [], onChange }) {
+  return (
+    <label>
+      {label}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="all">All</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label} ({option.count})
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -2005,7 +2249,7 @@ function coverageRows(data) {
   const metrics = getOverviewMetrics(data);
   const schemaCount = recommendations.filter((rec) => /schema|structured/i.test(`${rec.title} ${rec.surface}`)).length;
   const rows = [
-    ["Pages", summary.pages ?? data?.radisson_pages?.length ?? 0],
+    ["Pages in run", runPageCoverageCount(data)],
     ["Metadata", summary.metadata_changes ?? data?.metadata_changes?.length ?? 0],
     ["Schema", schemaCount],
     ["Copy", summary.copy_blocks ?? data?.copy_blocks?.length ?? 0],
@@ -2013,6 +2257,12 @@ function coverageRows(data) {
   ];
   const max = Math.max(...rows.map(([, value]) => Number(value) || 0), 1);
   return rows.map(([label, value]) => ({ label, value, percent: Math.max(8, Math.round((Number(value) / max) * 100)) }));
+}
+
+function runPageCoverageCount(data) {
+  const summary = data?.summary || {};
+  const scope = data?.run?.scope || {};
+  return scope.pages_audited ?? summary.pages ?? data?.radisson_pages?.length ?? 0;
 }
 
 function topRecommendations(recommendations, count) {
@@ -2061,6 +2311,16 @@ function buildLookups(data) {
     sources: new Map((data?.sources || []).map((item) => [item.source_id, item])),
     pages: new Map((data?.radisson_pages || []).map((item) => [item.canonical_url, item]))
   };
+}
+
+function registryRowKey(row) {
+  return row?.normalized_url || row?.canonical_url || row?.url || "";
+}
+
+function registryActiveFilterCount(filters) {
+  const exactFields = ["brand", "region", "country", "locale", "page_type", "content_group", "location_confidence"];
+  const exactCount = exactFields.filter((field) => filters[field] && filters[field] !== "all").length;
+  return exactCount + (filters.query?.trim() ? 1 : 0);
 }
 
 function filterRecommendations(recommendations, filters) {
