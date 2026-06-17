@@ -1831,14 +1831,6 @@ input {
   color: var(--red);
 }
 
-.readiness-panel .readiness-count-note {
-  max-width: 760px;
-  margin-left: auto;
-  margin-right: auto;
-  color: var(--muted);
-  font-weight: 650;
-}
-
 .readiness-facts {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1882,7 +1874,7 @@ input {
   line-height: 1;
 }
 
-.readiness-facts span {
+.readiness-fact > span {
   display: block;
   margin-top: 5px;
   color: var(--text);
@@ -1891,13 +1883,84 @@ input {
   line-height: 1.25;
 }
 
-.readiness-facts small {
+.readiness-fact > small {
   display: block;
   margin-top: 4px;
   color: var(--muted);
   font-size: 10px;
   font-weight: 650;
   line-height: 1.25;
+}
+
+.readiness-fact > .readiness-fact-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+}
+
+.fact-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 2;
+}
+
+.fact-info-button {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdf9;
+  color: var(--muted);
+  cursor: help;
+}
+
+.fact-info-button:hover,
+.fact-info-button:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue);
+  outline: none;
+}
+
+.fact-info-tooltip {
+  pointer-events: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 50;
+  display: none;
+  width: min(360px, 78vw);
+  padding: 10px 12px 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 12px 28px rgba(16, 24, 32, 0.16);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: left;
+  transform: translateX(-50%);
+}
+
+.fact-info-tooltip::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 6px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--red);
+}
+
+.fact-info-wrap:hover .fact-info-tooltip,
+.fact-info-wrap:focus-within .fact-info-tooltip {
+  display: block;
 }
 
 .fact-total {

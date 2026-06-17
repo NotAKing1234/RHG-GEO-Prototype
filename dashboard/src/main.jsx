@@ -73,7 +73,8 @@ const TAG_HELP_BY_LABEL = {
   "ready to send": "This item has enough evidence and routing detail to move into stakeholder handoff. Still confirm any team-specific ownership or Jira fields before import.",
   "need review": "This item needs a human check before sending. Usually the missing piece is a selector, target field, or implementation owner.",
   "medium evidence": "This item is supported, but the evidence is not as strong as an implementation-ready recommendation. Review the linked sources before treating it as ready to send.",
-  "validation error": "This item has a validation issue in the dashboard data. Fix the underlying data before exporting it as a Jira ticket.",
+  "validation error": "This item has a validation issue in the dashboard data. Review or fix the underlying data before exporting it as a Jira ticket.",
+  "needs validation": "This item has a validation issue in the dashboard data. Review or fix the underlying data before exporting it as a Jira ticket.",
   "metadata field target": "The recommendation targets a metadata or structured data field rather than a visible page selector. Confirm the exact field name before sending the ticket.",
   "warning: selector not inferred": SELECTOR_WARNING_HELP,
   "team override selector": "A reviewer supplied or adjusted the selector manually. Use the override as the implementation target unless new page evidence contradicts it.",
@@ -486,7 +487,6 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
           <p className={metrics.crawl.blockedPages ? "readiness-note danger" : "readiness-note"}>
             {readinessNotation(metrics)}
           </p>
-          <p className="readiness-count-note">{recommendationCountNotation(metrics)}</p>
           <div className="readiness-facts">
             <div className="readiness-fact fact-total">
               <b>{metrics.recommendations}</b>
@@ -505,7 +505,10 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
             </div>
             <div className="readiness-fact fact-crawl">
               <b>{metrics.crawl.blockedPages}</b>
-              <span>Restricted reads</span>
+              <span className="readiness-fact-label">
+                403 / restricted reads
+                <FactInfo label="403 / restricted reads" text={recommendationCountNotation(metrics)} />
+              </span>
               <small>Not in total</small>
             </div>
             <div className="readiness-fact fact-sources">
@@ -744,7 +747,7 @@ function FilterBar({ data, filters, setFilters }) {
           <option value="all">All evidence</option>
           <option value="Implementation-ready">Ready to send</option>
           <option value="Medium evidence">Medium evidence</option>
-          <option value="Validation error">Validation error</option>
+          <option value="Validation error">Needs validation</option>
         </select>
       </label>
       <label>
@@ -2025,6 +2028,17 @@ function ScorecardHelp({ label, text }) {
   );
 }
 
+function FactInfo({ label, text }) {
+  return (
+    <span className="fact-info-wrap">
+      <span className="fact-info-button" tabIndex={0} title={text} aria-label={`${label}: ${text}`}>
+        <Info size={11} aria-hidden="true" />
+      </span>
+      <span className="fact-info-tooltip" aria-hidden="true">{text}</span>
+    </span>
+  );
+}
+
 function scorecardHelp(key) {
   return SCORECARD_HELP_BY_KEY[key] || `This scorecard field summarizes ${labelize(key).toLowerCase()} for the selected source. Use it as quick context when judging source quality and relevance.`;
 }
@@ -2071,7 +2085,7 @@ function Tag({ children, danger = false, warn = false, ok = false, help = "" }) 
 
 function EvidenceTag({ tier }) {
   const danger = tier === "Validation error";
-  const label = tier === "Implementation-ready" ? "Ready to send" : tier || "Evidence not set";
+  const label = tier === "Implementation-ready" ? "Ready to send" : tier === "Validation error" ? "Needs validation" : tier || "Evidence not set";
   return <Tag danger={danger} warn={tier === "Medium evidence"} ok={Boolean(tier && !danger && tier !== "Medium evidence")} help={tagHelp(label)}>{label}</Tag>;
 }
 
