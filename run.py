@@ -11,13 +11,14 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from scripts import db
 from scripts.export import export_all
-from scripts.migrate_to_sqlite import migrate
+from scripts.migrate_to_sqlite import infer_brand, migrate, parse_criteria, parse_gaps, parse_proposals
 
 
 ROOT = Path(__file__).resolve().parent
@@ -95,6 +96,97 @@ def expected_files(state: dict[str, Any], phase: str | None = None) -> list[Path
 
 def missing_required_files(state: dict[str, Any], phase: str | None = None) -> list[Path]:
     return [path for path in expected_files(state, phase) if not path.exists() or path.stat().st_size == 0]
+
+
+def urls_in(text: str) -> list[str]:
+    values: list[str] = []
+    seen: set[str] = set()
+    for raw in re.findall(r"https?://[^\s)<>\]\"']+", text or ""):
+        url = raw.rstrip(".,;)]}\"'")
+        if url not in seen:
+            values.append(url)
+            seen.add(url)
+    return values
+
+
+def source_title_for(url: str) -> str:
+    host = urllib.parse.urlsplit(url).netloc or url
+    return host.removeprefix("www.")
+
+
+def sync_phase_to_db(state: dict[str, Any], phase: str) -> None:
+    run_id = state["run_id"]
+    run_dir = ROOT / state["run_dir"]
+    with db.connection() as conn:
+        if phase == PHASE_0:
+            conn.execute("DELETE FROM source_insights WHERE run_id = ?", (run_id,))
+            conn.execute("DELETE FROM sources WHERE run_id = ?", (run_id,))
+            conn.execute("DELETE FROM criteria WHERE run_id = ?", (run_id,))
+            for item in parse_criteria(ROOT / "framework" / f"{run_id}_criteria.md", run_id):
+                db.upsert_criterion(conn, run_id, item["code"], item["description"])
+            literature_text = (ROOT / "literature" / f"{run_id}_sources.md").read_text(encoding="utf-8", errors="replace")
+            for url in urls_in(literature_text):
+                parsed = urllib.parse.urlsplit(url)
+                cur = conn.execute(
+                    """
+                    INSERT INTO sources(run_id, url, domain, title, source_type, credibility, fetched_at)
+                    VALUES(?, ?, ?, ?, 'literature', 1.0, ?)
+                    """,
+                    (run_id, url, parsed.netloc, source_title_for(url), datetime.now().isoformat(timespec="seconds")),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO source_insights(source_id, run_id, claim, theme, weight)
+                    VALUES(?, ?, ?, 'literature_source', 1.0)
+                    """,
+                    (cur.lastrowid, run_id, f"Literature source consulted: {url}"),
+                )
+        elif phase == PHASE_2:
+            for item in parse_gaps(run_dir / "gap_analysis.md", run_id):
+                url_id = db.upsert_url(conn, item["url"], brand=infer_brand(item["url"])) if item["url"] else None
+                db.upsert_gap(
+                    conn,
+                    item["gap_id"],
+                    run_id,
+                    url_id=url_id,
+                    criterion_id=db.criterion_id_for_code(conn, run_id, item["criterion_code"]),
+                    gap_type=item["gap_type"],
+                    severity=item["severity"],
+                    status=item["status"],
+                    description=item["description"],
+                )
+        elif phase == PHASE_3:
+            for item in parse_proposals(run_dir / "optimization_proposal.md", run_id):
+                existing_gap = conn.execute("SELECT gap_id FROM gaps WHERE gap_id = ?", (item["gap_id"],)).fetchone()
+                if not existing_gap:
+                    db.upsert_gap(
+                        conn,
+                        item["gap_id"],
+                        run_id,
+                        url_id=None,
+                        criterion_id=None,
+                        gap_type="WEAK",
+                        severity=1,
+                        status="NEW",
+                        description="[NEEDED: proposal references a gap not present in gap_analysis.md]",
+                    )
+                db.upsert_proposal(
+                    conn,
+                    item["proposal_id"],
+                    item["gap_id"],
+                    run_id,
+                    proposed_change=item["proposed_change"],
+                    priority_tier=item["priority_tier"],
+                    impact_estimate=item["impact_estimate"],
+                )
+        elif phase == PHASE_3_5:
+            db.build_jira_tickets(conn, run_id)
+        elif phase == PHASE_4:
+            conn.execute("UPDATE runs SET status = 'COMPLETED' WHERE run_id = ?", (run_id,))
+            conn.execute(
+                "UPDATE urls SET last_audited_run = ?, selected_for_next_run = 0 WHERE selected_for_next_run = 1",
+                (run_id,),
+            )
 
 
 def print_phase_prompt(state: dict[str, Any]) -> None:
@@ -187,17 +279,15 @@ def advance(skip_scrape: bool = False) -> int:
         missing = ", ".join(rel(path) for path in missing_required_files(state, phase))
         print(f"Cannot advance; missing required files for {phase}: {missing}")
         return 2
+    if not skip_scrape or phase == PHASE_3_5:
+        sync_phase_to_db(state, phase)
     if phase == PHASE_3_5:
-        with db.connection() as conn:
-            db.build_jira_tickets(conn, state["run_id"])
         export_all(state["run_id"])
     completed = list(state.get("completed_phases", []))
     if phase not in completed:
         completed.append(phase)
     current_index = PHASE_ORDER.index(phase)
     if current_index == len(PHASE_ORDER) - 1:
-        with db.connection() as conn:
-            conn.execute("UPDATE runs SET status = 'COMPLETED' WHERE run_id = ?", (state["run_id"],))
         state["status"] = "COMPLETED"
         state["completed_phases"] = completed
         save_state(state)
