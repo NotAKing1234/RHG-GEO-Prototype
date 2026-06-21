@@ -100,7 +100,10 @@ def registry_filter_from_query(query: dict[str, list[str]]) -> dict[str, str]:
         "query": query.get("query", [""])[0].strip(),
         "brand": query.get("brand", ["all"])[0] or "all",
         "region": query.get("region", ["all"])[0] or "all",
+        "country": query.get("country", ["all"])[0] or "all",
+        "locale": query.get("locale", ["all"])[0] or "all",
         "page_type": query.get("page_type", ["all"])[0] or "all",
+        "content_group": query.get("content_group", ["all"])[0] or "all",
         "location_confidence": query.get("location_confidence", ["all"])[0] or "all",
         "audit_profile": query.get("audit_profile", ["metadata_light"])[0] or "metadata_light",
         "model": query.get("model", ["gpt-5.4-mini"])[0] or "gpt-5.4-mini",
@@ -113,7 +116,10 @@ def registry_filter_from_payload(payload: dict[str, Any]) -> dict[str, str]:
         "query": str(values.get("query") or "").strip(),
         "brand": str(values.get("brand") or "all"),
         "region": str(values.get("region") or "all"),
+        "country": str(values.get("country") or "all"),
+        "locale": str(values.get("locale") or "all"),
         "page_type": str(values.get("page_type") or "all"),
+        "content_group": str(values.get("content_group") or "all"),
         "location_confidence": str(values.get("location_confidence") or "all"),
         "audit_profile": str(values.get("audit_profile") or "metadata_light"),
         "model": str(values.get("model") or "gpt-5.4-mini"),
@@ -121,13 +127,13 @@ def registry_filter_from_payload(payload: dict[str, Any]) -> dict[str, str]:
 
 
 def has_active_registry_filter(filters: dict[str, str]) -> bool:
-    exact_fields = ["brand", "region", "page_type", "location_confidence"]
+    exact_fields = ["brand", "region", "country", "locale", "page_type", "content_group", "location_confidence"]
     return bool(filters.get("query")) or any(filters.get(field, "all") != "all" for field in exact_fields)
 
 
 def registry_options(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     options: dict[str, list[dict[str, Any]]] = {}
-    for field in ["brand", "region", "page_type", "location_confidence"]:
+    for field in ["brand", "region", "country", "locale", "page_type", "content_group", "location_confidence"]:
         counts: dict[str, int] = {}
         for row in rows:
             value = str(row.get(field) or "Unspecified")
@@ -141,10 +147,25 @@ def registry_options(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any
 
 def read_url_registry(filters: dict[str, str] | None = None) -> list[dict[str, Any]]:
     ensure_db()
+    filters = dict(filters or {})
+    db_filters = dict(filters)
+    if db_filters.get("content_group", "all") != "all" and db_filters.get("page_type", "all") == "all":
+        db_filters["page_type"] = db_filters["content_group"]
     with db.connection(GEO_DB_PATH) as conn:
-        values = db.list_urls(conn, filters)
+        values = db.list_urls(conn, db_filters)
     for value in values:
-        value["selected_for_next_run"] = bool(value.get("selected_for_next_run"))
+        value["canonical_url"] = value["url"]
+        value["normalized_url"] = value["url"]
+        value["country"] = value.get("country") or ""
+        value["locale"] = value.get("locale") or ""
+        value["content_group"] = value.get("content_group") or value.get("page_type") or ""
+        value["location_source"] = value.get("location_source") or "db"
+        value["source_sitemap"] = value.get("source_sitemap") or ""
+        value["selected_for_next_run"] = "true" if value.get("selected_for_next_run") else "false"
+    for field in ("country", "locale"):
+        wanted = filters.get(field, "all")
+        if wanted != "all":
+            values = [value for value in values if (value.get(field) or "Unspecified") == wanted]
     return values
 
 
