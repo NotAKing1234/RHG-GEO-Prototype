@@ -1,1 +1,47 @@
+# OS / System files
 .DS_Store
+Thumbs.db
+
+# Secrets & Local Configurations
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python virtual envs & caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+pip-log.txt
+
+# SQLite runtime state
+db/*.db
+db/*.db-shm
+db/*.db-wal
+
+# Node / Vite dashboard output
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Playwright & browser captures
+test-results/
+playwright-report/
+**/browser_captures/
+
+# Active run state
+runs/active_run.json
+
+# Large generated UI evidence
+analysis/video-evidence/
