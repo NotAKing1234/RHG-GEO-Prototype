@@ -42,6 +42,7 @@ playwright-report/
 
 # Active run state
 runs/active_run.json
+sources/website/run_targets/
 
 # Large generated UI evidence
 analysis/video-evidence/

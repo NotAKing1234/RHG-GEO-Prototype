@@ -22,7 +22,16 @@ REPO_ROOT = DASHBOARD_ROOT.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts import db  # noqa: E402
-from scripts.export import export_all, jira_csv_content  # noqa: E402
+from scripts.dashboard_read_model import (  # noqa: E402
+    audit_export,
+    capture_page,
+    clipboard_export,
+    csv_export,
+    dashboard_payload,
+    dashboard_runs,
+)
+from scripts.export import export_all, jira_csv_content, write_next_geo_run  # noqa: E402
+from scripts.import_run_artifacts import import_all_runs, import_run as import_single_run  # noqa: E402
 from scripts.migrate_to_sqlite import migrate  # noqa: E402
 
 
@@ -70,6 +79,11 @@ def ensure_db() -> None:
         result = migrate(GEO_DB_PATH)
         if not result["valid"]:
             raise RuntimeError(f"Migration validation failed: {result['mismatches']}")
+    db.initialize_database(GEO_DB_PATH)
+    with db.connection(GEO_DB_PATH) as conn:
+        counts = db.table_counts(conn)
+    if counts.get("runs", 0) and counts.get("sources", 0) == 0:
+        import_all_runs(GEO_DB_PATH)
 
 
 def estimate_registry_cost(row_count: int, profile_id: str, model_id: str) -> dict[str, Any]:
@@ -172,7 +186,7 @@ def read_url_registry(filters: dict[str, str] | None = None) -> list[dict[str, A
 def registry_payload(filters: dict[str, str], *, limit: int = 250, offset: int = 0) -> dict[str, Any]:
     rows = read_url_registry(filters)
     all_rows = read_url_registry({})
-    selected_count = sum(1 for row in all_rows if row.get("selected_for_next_run"))
+    selected_count = sum(1 for row in all_rows if row.get("selected_for_next_run") == "true")
     return {
         "registry_path": "db/geo_optimizer.db:urls",
         "registry_source": "sqlite",
@@ -211,6 +225,15 @@ def save_registry_selection(payload: dict[str, Any]) -> dict[str, Any]:
                     f"{MAX_ACTIVE_TARGETS_FOR_RUN_SCOPE} without confirm_large_selection=true."
                 )
             result = db.set_selected_by_filters(conn, filters)
+        db.record_selection_event(
+            conn,
+            action="save_next_run",
+            selection_mode=result.selection_mode,
+            selected_count=result.selected_count,
+            filters=filters,
+            selected_url_values=result.selected_urls[:50],
+        )
+        write_next_geo_run(conn)
     return {
         "next_run_path": "sources/website/run_targets/next_geo_run.csv",
         "selected_count": result.selected_count,
@@ -223,7 +246,7 @@ def save_registry_selection(payload: dict[str, Any]) -> dict[str, Any]:
 def export_jira_csv(run_id: str, data: dict[str, Any] | None = None, proposal_id: str | None = None) -> dict[str, Any]:
     ensure_db()
     with db.connection(GEO_DB_PATH) as conn:
-        content = jira_csv_content(conn, run_id)
+        content = jira_csv_content(conn, run_id, proposal_id=proposal_id)
     return {"type": "jira_csv", "filename": f"{run_id}_jira_import.csv", "content": content, "fields": JIRA_CSV_FIELDS}
 
 
@@ -231,10 +254,16 @@ def export_dashboard(run_id: str, export_type: str, proposal_id: str | None = No
     ensure_db()
     if export_type == "jira_csv":
         return export_jira_csv(run_id, proposal_id=proposal_id)
+    with db.connection(GEO_DB_PATH) as conn:
+        payload = dashboard_payload(conn, run_id)
     if export_type == "json":
-        with db.connection(GEO_DB_PATH) as conn:
-            payload = {"tables": db.table_counts(conn), "urls": db.list_urls(conn)}
         return {"type": "json", "filename": f"{run_id}_dashboard.json", "content": json.dumps(payload, indent=2)}
+    if export_type == "csv":
+        return {"type": "csv", "filename": f"{run_id}_dashboard.csv", "content": csv_export(payload)}
+    if export_type == "clipboard":
+        return {"type": "clipboard", "filename": f"{run_id}_handoff.txt", "content": clipboard_export(payload)}
+    if export_type == "audit":
+        return {"type": "audit", "filename": f"{run_id}_audit.txt", "content": audit_export(payload)}
     export_all(run_id, GEO_DB_PATH)
     return {"type": export_type, "filename": f"{run_id}_{export_type}.txt", "content": f"Exports regenerated for {run_id}."}
 
@@ -282,6 +311,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 ensure_db()
                 with db.connection(GEO_DB_PATH) as conn:
                     self.send_json({"status": "ok", "db_path": rel(GEO_DB_PATH), "tables": db.table_counts(conn)})
+            elif parsed.path == "/api/dashboard/runs":
+                ensure_db()
+                with db.connection(GEO_DB_PATH) as conn:
+                    self.send_json({"runs": dashboard_runs(conn)})
+            elif parsed.path == "/api/dashboard/data":
+                ensure_db()
+                run_id = query.get("run_id", query.get("runId", [None]))[0]
+                with db.connection(GEO_DB_PATH) as conn:
+                    self.send_json(dashboard_payload(conn, run_id))
             elif parsed.path == "/api/url-registry":
                 limit = int(query.get("limit", ["250"])[0])
                 offset = int(query.get("offset", ["0"])[0])
@@ -301,6 +339,50 @@ class DashboardHandler(BaseHTTPRequestHandler):
         try:
             if parsed.path == "/api/url-registry/selection":
                 self.send_json(save_registry_selection(self.read_body()))
+            elif parsed.path == "/api/dashboard/import":
+                ensure_db()
+                body = self.read_body()
+                run_id = body.get("run_id")
+                if run_id:
+                    with db.connection(GEO_DB_PATH) as conn:
+                        import_single_run(conn, str(run_id))
+                        self.send_json(dashboard_payload(conn, str(run_id)))
+                else:
+                    import_all_runs(GEO_DB_PATH)
+                    with db.connection(GEO_DB_PATH) as conn:
+                        self.send_json(dashboard_payload(conn, None))
+            elif parsed.path == "/api/dashboard/capture":
+                ensure_db()
+                body = self.read_body()
+                run_id = str(body.get("run_id") or "")
+                url = str(body.get("url") or "")
+                if not run_id or not url:
+                    self.send_error_json("run_id and url are required", 400)
+                    return
+                with db.connection(GEO_DB_PATH) as conn:
+                    capture = capture_page(conn, run_id, url)
+                    self.send_json({"capture": capture, "data": dashboard_payload(conn, run_id)})
+            else:
+                self.send_error_json("Not found", 404)
+        except Exception as exc:
+            self.send_error_json(str(exc), 400)
+
+    def do_PUT(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        try:
+            if parsed.path == "/api/dashboard/overrides":
+                ensure_db()
+                body = self.read_body()
+                run_id = str(body.get("run_id") or "")
+                proposal_id = str(body.get("proposal_id") or "")
+                override = body.get("override") if isinstance(body.get("override"), dict) else {}
+                if not run_id or not proposal_id:
+                    self.send_error_json("run_id and proposal_id are required", 400)
+                    return
+                with db.connection(GEO_DB_PATH) as conn:
+                    db.save_dashboard_override(conn, run_id, proposal_id, override)
+                    db.build_jira_tickets(conn, run_id)
+                    self.send_json(dashboard_payload(conn, run_id))
             else:
                 self.send_error_json("Not found", 404)
         except Exception as exc:

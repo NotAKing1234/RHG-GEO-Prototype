@@ -18,6 +18,7 @@ from typing import Any
 
 from scripts import db
 from scripts.export import export_all
+from scripts.import_run_artifacts import import_all_runs
 from scripts.migrate_to_sqlite import infer_brand, migrate, parse_criteria, parse_gaps, parse_proposals
 
 
@@ -184,8 +185,12 @@ def sync_phase_to_db(state: dict[str, Any], phase: str) -> None:
         elif phase == PHASE_4:
             conn.execute("UPDATE runs SET status = 'COMPLETED' WHERE run_id = ?", (run_id,))
             conn.execute(
-                "UPDATE urls SET last_audited_run = ?, selected_for_next_run = 0 WHERE selected_for_next_run = 1",
-                (run_id,),
+                """
+                UPDATE urls
+                SET last_audited_run = ?
+                WHERE url_id IN (SELECT url_id FROM run_url_targets WHERE run_id = ?)
+                """,
+                (run_id, run_id),
             )
 
 
@@ -218,6 +223,11 @@ def ensure_db() -> None:
         result = migrate(db.DB_PATH)
         if not result["valid"]:
             raise SystemExit(f"Migration validation failed: {result['mismatches']}")
+    db.initialize_database(db.DB_PATH)
+    with db.connection() as conn:
+        counts = db.table_counts(conn)
+    if counts.get("runs", 0) and counts.get("sources", 0) == 0:
+        import_all_runs(db.DB_PATH)
 
 
 def init_run() -> int:
@@ -233,7 +243,7 @@ def init_run() -> int:
         run_dir = ROOT / "runs" / f"{run_id}_{run_date}"
         run_dir.mkdir(parents=True, exist_ok=True)
         db.upsert_run(conn, run_id, next_number, run_date, "IN_PROGRESS", previous_run_id(conn))
-        selected_count = len(db.selected_urls(conn))
+        selected_count = db.snapshot_next_run_targets(conn, run_id)
     state = {
         "run_id": run_id,
         "run_number": next_number,

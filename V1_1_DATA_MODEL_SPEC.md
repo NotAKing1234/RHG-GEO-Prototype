@@ -8,8 +8,8 @@
 
 - **SQLite is the system of record** (`db/geo_optimizer.db`). CSV/Markdown are generated exports, not authority.
 - **One linear pipeline:** `sources → source_insights → criteria → gaps → gap_insights → proposals → jira_tickets`.
-- **9 tables.** The final `jira_tickets` step prepares each proposal as a Jira-import row matching `RHG JIRA EXPORT.csv` exactly.
-- **Selection is a DB flag**, not a CSV race. Dashboard checks a box → `selected_for_next_run = 1` → agents query it.
+- **9 core pipeline tables plus dashboard persistence tables.** The final `jira_tickets` step prepares each proposal as a Jira-import row matching `RHG JIRA EXPORT.csv` exactly. Dashboard operation adds normalized storage for run artifacts, metadata snapshots, proposal changes, saved overrides, export audit records, and run-scoped URL target snapshots.
+- **Selection is a DB workflow**, not a CSV race. Dashboard checks a box → `selected_for_next_run = 1` → `python3 run.py --init` snapshots those URLs into `run_url_targets` → agents audit the frozen run scope.
 
 ---
 
@@ -22,9 +22,19 @@ sources ─▶ source_insights ─▶ criteria ─▶ gaps ─▶ proposals ─�
                     └────────── gap_insights ──────┘
 ```
 
+Dashboard/run-operation extension:
+
+```text
+run_artifacts ─▶ metadata_snapshots ─▶ proposal_changes
+dashboard_overrides ─▶ jira_tickets ─▶ jira_exports
+urls.selected_for_next_run ─▶ run_url_targets ─▶ current run audit scope
+url_selection_events ─▶ run_url_targets provenance
+proposal_sources ─▶ source traceability in the dashboard
+```
+
 ---
 
-## 2. Tables (9)
+## 2. Core Pipeline Tables (9)
 
 ```sql
 -- runs: the run envelope. In: one row per run. Pitfall: stops cross-run data bleed.

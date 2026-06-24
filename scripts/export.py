@@ -45,8 +45,10 @@ def render_target_urls(conn) -> str:
     return "\n".join(lines)
 
 
-def write_next_geo_run(conn, path: Path = NEXT_GEO_RUN) -> None:
-    rows = db.selected_urls(conn)
+def write_next_geo_run(conn, path: Path = NEXT_GEO_RUN, run_id: str | None = None) -> None:
+    rows = db.run_target_urls(conn, run_id) if run_id else []
+    if not rows:
+        rows = db.selected_urls(conn)
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = ["url", "brand", "region", "page_type", "location_confidence", "selected_for_next_run", "selected_at", "last_audited_run"]
     with path.open("w", encoding="utf-8", newline="") as fh:
@@ -147,14 +149,22 @@ def render_sources(conn, run_id: str) -> str:
     return "\n".join(lines)
 
 
-def jira_csv_content(conn, run_id: str) -> str:
+def jira_csv_content(conn, run_id: str, proposal_id: str | int | None = None) -> str:
     if not db.jira_export_rows(conn, run_id):
         db.build_jira_tickets(conn, run_id)
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=db.JIRA_FIELDS, lineterminator="\n")
     writer.writeheader()
-    writer.writerows(db.jira_export_rows(conn, run_id))
-    return output.getvalue()
+    writer.writerows(db.jira_export_rows(conn, run_id, proposal_id=proposal_id))
+    content = output.getvalue()
+    conn.execute(
+        """
+        INSERT INTO jira_exports(run_id, proposal_id, export_type, csv_content, created_at)
+        VALUES(?, ?, 'jira_csv', ?, ?)
+        """,
+        (run_id, str(proposal_id) if proposal_id not in (None, "") else None, content, db.utc_now()),
+    )
+    return content
 
 
 def export_all(run_id: str, db_path: Path = db.DB_PATH) -> dict[str, str]:
@@ -164,7 +174,7 @@ def export_all(run_id: str, db_path: Path = db.DB_PATH) -> dict[str, str]:
         TARGET_URLS.write_text(render_target_urls(conn), encoding="utf-8")
         written["target_urls"] = str(TARGET_URLS)
 
-        write_next_geo_run(conn)
+        write_next_geo_run(conn, run_id=run_id)
         written["next_geo_run"] = str(NEXT_GEO_RUN)
 
         current_run_dir = run_dir_for(run_id)

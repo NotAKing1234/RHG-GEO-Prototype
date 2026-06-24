@@ -4,14 +4,22 @@ This repository runs a local-first GEO optimization workflow for Radisson Hotel 
 # Section 2 — How to Run
 Open this repository in Claude Code and either type `/geo-run` or say "run the pipeline". Claude Code should handle the workflow end to end by following the instructions in this file, including web research, website audit, gap analysis, sub-agent research, proposal generation, and memory updates.
 
+The first action for a new run is always:
+
+```bash
+python3 run.py --init
+```
+
+This creates the run envelope in SQLite, creates the timestamped run folder, and snapshots any dashboard-selected "Research Next" URLs into `run_url_targets`. Use the printed run ID and run folder for all later outputs.
+
 # Section 3 — Pipeline Instructions
 Use the following execution rules on every run:
 
 - Always infer the current run number before doing any work.
 - Always read `/memory/master_summary.md` and `/memory/run_index.md` at the start of every run.
-- Compute `NNN` from the last line of `/memory/run_index.md` using zero-padded numbering. If no run lines exist, use `run_001`.
+- Initialize the run with `python3 run.py --init`; it computes `NNN` from SQLite/run history and stores the active run pointer.
 - Compute `RUN_DATE` using the local current date in `YYYY-MM-DD` format.
-- Create the active run directory as `/runs/run_NNN_YYYY-MM-DD/` before writing outputs.
+- Use the active run directory printed by `python3 run.py --init` before writing outputs.
 - When older instructions refer to `/runs/run_NNN/...`, interpret that as the active timestamped run directory `/runs/run_NNN_YYYY-MM-DD/...` for the current run.
 - Write all current-run outputs into the active run directory and do not write current-run artifacts anywhere else unless a phase explicitly names another destination such as `/framework/`, `/literature/`, `/memory/`, or `/inferred/`.
 - Report progress at the start of each phase with a one-line status update.
@@ -75,7 +83,9 @@ The context brief must include:
 - Implications for scoring and prioritization in the current run
 
 ## PHASE 2 — AUDIT AND GAP ANALYSIS
-Load the target pages from `/sources/website/target_urls.md`.
+Load the target pages from SQLite `run_url_targets` for the active run created by `python3 run.py --init`.
+
+Compatibility note: `/sources/website/run_targets/next_geo_run.csv` and `/sources/website/target_urls.md` are generated views for inspection and legacy tools. They are not the source of truth once the run has been initialized.
 
 Audit rules:
 
