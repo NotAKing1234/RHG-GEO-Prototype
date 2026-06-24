@@ -123,8 +123,13 @@ def parse_registry(path: Path = URL_REGISTRY) -> list[dict[str, str]]:
                     "url": url,
                     "brand": row.get("brand") or "",
                     "region": row.get("region") or row.get("locale_region") or "",
+                    "country": row.get("country") or row.get("locale_country") or "",
+                    "locale": row.get("locale") or "",
                     "page_type": row.get("page_type") or row.get("content_group") or "",
+                    "content_group": row.get("content_group") or "",
                     "location_confidence": row.get("location_confidence") or "",
+                    "location_source": row.get("location_source") or "",
+                    "source_sitemap": row.get("source_sitemap") or "",
                     "selected_for_next_run": truthy(row.get("selected_for_next_run")),
                 }
             )
@@ -305,8 +310,13 @@ def migrate(db_path: Path = db.DB_PATH) -> dict[str, Any]:
                 item["url"],
                 brand=item.get("brand") or None,
                 region=item.get("region") or None,
+                country=item.get("country") or None,
+                locale=item.get("locale") or None,
                 page_type=item.get("page_type") or None,
+                content_group=item.get("content_group") or None,
                 location_confidence=item.get("location_confidence") or None,
+                location_source=item.get("location_source") or None,
+                source_sitemap=item.get("source_sitemap") or None,
                 selected_for_next_run=item.get("selected_for_next_run") if "selected_for_next_run" in item else None,
             )
 

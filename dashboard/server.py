@@ -162,11 +162,8 @@ def registry_options(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any
 def read_url_registry(filters: dict[str, str] | None = None) -> list[dict[str, Any]]:
     ensure_db()
     filters = dict(filters or {})
-    db_filters = dict(filters)
-    if db_filters.get("content_group", "all") != "all" and db_filters.get("page_type", "all") == "all":
-        db_filters["page_type"] = db_filters["content_group"]
     with db.connection(GEO_DB_PATH) as conn:
-        values = db.list_urls(conn, db_filters)
+        values = db.list_urls(conn, filters)
     for value in values:
         value["canonical_url"] = value["url"]
         value["normalized_url"] = value["url"]
@@ -176,10 +173,6 @@ def read_url_registry(filters: dict[str, str] | None = None) -> list[dict[str, A
         value["location_source"] = value.get("location_source") or "db"
         value["source_sitemap"] = value.get("source_sitemap") or ""
         value["selected_for_next_run"] = "true" if value.get("selected_for_next_run") else "false"
-    for field in ("country", "locale"):
-        wanted = filters.get(field, "all")
-        if wanted != "all":
-            values = [value for value in values if (value.get(field) or "Unspecified") == wanted]
     return values
 
 

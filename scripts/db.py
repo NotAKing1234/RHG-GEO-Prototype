@@ -343,19 +343,26 @@ def list_urls(conn: sqlite3.Connection, filters: dict[str, str] | None = None) -
     filters = filters or {}
     clauses: list[str] = []
     params: list[Any] = []
-    for field in ("brand", "region", "page_type", "location_confidence"):
+    exact_fields = ("brand", "region", "country", "locale", "page_type", "content_group", "location_confidence")
+    for field in exact_fields:
         value = filters.get(field)
         if value and value != "all":
             if value == "Unspecified":
                 clauses.append(f"(COALESCE({field}, '') = '')")
+            elif field == "content_group":
+                clauses.append("(content_group = ? OR (COALESCE(content_group, '') = '' AND page_type = ?))")
+                params.extend([value, value])
             else:
                 clauses.append(f"{field} = ?")
                 params.append(value)
     query_text = filters.get("query")
     if query_text:
-        clauses.append("(url LIKE ? OR brand LIKE ? OR region LIKE ? OR page_type LIKE ?)")
+        clauses.append(
+            "(url LIKE ? OR brand LIKE ? OR region LIKE ? OR country LIKE ? OR locale LIKE ? "
+            "OR page_type LIKE ? OR content_group LIKE ? OR source_sitemap LIKE ?)"
+        )
         like = f"%{query_text}%"
-        params.extend([like, like, like, like])
+        params.extend([like, like, like, like, like, like, like, like])
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return rows(
         conn,

@@ -8,6 +8,7 @@ from scripts import db
 from scripts.dashboard_read_model import dashboard_payload
 from scripts.export import jira_csv_content, write_next_geo_run
 from scripts.import_run_artifacts import import_all_runs
+from scripts.import_url_registry import import_registry_rows
 from scripts.migrate_to_sqlite import migrate
 
 
@@ -168,6 +169,54 @@ class SqlitePipelineTests(unittest.TestCase):
                 selected = db.selected_urls(conn)
             self.assertEqual(result.selected_count, 1)
             self.assertEqual([row["url"] for row in selected], ["https://example.com/b"])
+
+    def test_registry_import_preserves_selection_and_filters_full_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "geo.db"
+            db.initialize_database(db_path)
+            rows = [
+                {
+                    "normalized_url": "https://www.radissonhotels.com/en-us/brand/radisson-blu",
+                    "brand": "Radisson Blu",
+                    "region": "North America",
+                    "country": "United States",
+                    "locale": "en-us",
+                    "content_group": "radisson-blu",
+                    "page_type": "brand",
+                    "location_source": "locale_fallback",
+                    "location_confidence": "low",
+                    "source_sitemap": "https://www.radissonhotels.com/en-us/sitemap-radisson-blu.xml",
+                    "selected_for_next_run": "false",
+                },
+                {
+                    "normalized_url": "https://www.radissonhotels.com/de-de/destination/germany/berlin",
+                    "brand": "Radisson",
+                    "locale_region": "Europe",
+                    "locale_country": "Germany",
+                    "locale": "de-de",
+                    "content_group": "destinations",
+                    "page_type": "destination",
+                    "location_source": "locale_fallback",
+                    "location_confidence": "low",
+                    "source_sitemap": "https://www.radissonhotels.com/de-de/sitemap-destinations.xml",
+                    "selected_for_next_run": "true",
+                },
+            ]
+            with db.connection(db_path) as conn:
+                db.upsert_url(conn, rows[0]["normalized_url"])
+                db.set_selected_urls(conn, [rows[0]["normalized_url"]])
+                first = import_registry_rows(conn, rows)
+                second = import_registry_rows(conn, rows)
+                selected = db.selected_urls(conn)
+                country_rows = db.list_urls(conn, {"country": "Germany"})
+                group_rows = db.list_urls(conn, {"content_group": "radisson-blu"})
+                query_rows = db.list_urls(conn, {"query": "sitemap-destinations"})
+            self.assertEqual(first["processed"], 2)
+            self.assertEqual(second["processed"], 2)
+            self.assertEqual([row["url"] for row in selected], [rows[0]["normalized_url"]])
+            self.assertEqual([row["url"] for row in country_rows], [rows[1]["normalized_url"]])
+            self.assertEqual([row["url"] for row in group_rows], [rows[0]["normalized_url"]])
+            self.assertEqual([row["url"] for row in query_rows], [rows[1]["normalized_url"]])
 
     def test_next_run_selection_snapshots_to_run_targets_and_csv_view(self):
         with tempfile.TemporaryDirectory() as tmp:

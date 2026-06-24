@@ -22,6 +22,14 @@ Claude Code should execute the full pipeline defined in `CLAUDE.md`: literature 
 
 The dashboard's Radisson Links / URL Registry view controls the next run target set. When you save links as "Research Next", the selection is stored in SQLite. The next `/geo-run` calls `python3 run.py --init`, snapshots those pending links into `run_url_targets`, and uses that run-scoped snapshot for the audit.
 
+If the local SQLite database is rebuilt and the URL Registry shows only the small seed set, import the validated sitemap crawl registry before using Radisson Links:
+
+```bash
+python3 scripts/import_url_registry.py --historical --json
+```
+
+The importer preserves any pending "Research Next" selections by default and loads crawl metadata used by dashboard filters: brand, region, country, locale, page type, content group, location confidence, location source, and sitemap provenance.
+
 **Compatibility note**
 `sources/website/target_urls.md` and `sources/website/run_targets/next_geo_run.csv` are flat-file views for inspection and legacy tooling. Do not treat them as authority when SQLite is available.
 
