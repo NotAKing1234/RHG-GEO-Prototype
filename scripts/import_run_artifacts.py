@@ -137,6 +137,7 @@ def reset_derived_rows(conn, run_id: str) -> None:
     conn.execute("DELETE FROM sources WHERE run_id = ?", (run_id,))
     conn.execute("DELETE FROM proposal_changes WHERE run_id = ?", (run_id,))
     conn.execute("DELETE FROM metadata_snapshots WHERE run_id = ?", (run_id,))
+    conn.execute("DELETE FROM run_url_targets WHERE run_id = ?", (run_id,))
 
 
 def import_core_rows(conn, run_id: str, run_dir: Path | None) -> None:
@@ -207,12 +208,14 @@ def parse_proposal_details(path: Path, run_id: str) -> dict[int, dict[str, str]]
 
 def infer_change_type(text: str) -> str:
     lowered = text.lower()
-    if any(term in lowered for term in ("json-ld", "schema", "structured data", "faqpage", "memberprogram")):
+    if any(term in lowered for term in ("json-ld", "schema", "structured data", "faqpage", "memberprogram", "aggregaterating", "review markup", "review json-ld")):
         return "schema_update"
-    if any(term in lowered for term in ("title", "meta description", "metadata", "open graph")):
-        return "metadata_update"
-    if any(term in lowered for term in ("cloudflare", "robots.txt", "llms.txt", "crawler", "403", "waf")):
+    if any(term in lowered for term in ("chatgpt app", "openai apps sdk", "connector", "distribution roadmap", "hotel-search/feed", "review summary", "review pages", "aggregaterating/review")):
+        return "trust_distribution"
+    if any(term in lowered for term in ("cloudflare", "robots.txt", "llms.txt", "crawler", "crawlable", "403", "waf", "http 200", "sitemap", "access-restricted", "blocked", "noindex")):
         return "html_visibility"
+    if any(term in lowered for term in ("title", "meta description", "metadata", "open graph", "canonical", "hreflang", "og field")):
+        return "metadata_update"
     return "content_update"
 
 
@@ -220,6 +223,7 @@ def import_proposal_change(conn, run_id: str, proposal: dict[str, Any], detail: 
     proposed = proposal.get("proposed_change") or ""
     current = detail.get("current_state") or ""
     change_type = infer_change_type(f"{proposed} {current}")
+    target_page = first_url(proposed) or gap_url(conn, proposal.get("gap_id")) or ""
     conn.execute(
         """
         INSERT INTO proposal_changes(
@@ -240,13 +244,28 @@ def import_proposal_change(conn, run_id: str, proposal: dict[str, Any], detail: 
             proposal["proposal_id"],
             run_id,
             change_type,
-            first_url(proposal.get("proposed_change") or "") or "",
+            target_page,
             label_for_change(change_type),
             current,
             proposed,
-            "" if first_url(proposed) or proposal.get("gap_id") else "warning: selector not inferred",
+            "" if target_page or proposal.get("gap_id") else "warning: selector not inferred",
         ),
     )
+
+
+def gap_url(conn, gap_id: str | None) -> str:
+    if not gap_id:
+        return ""
+    found = conn.execute(
+        """
+        SELECT u.url
+        FROM gaps g
+        JOIN urls u ON u.url_id = g.url_id
+        WHERE g.gap_id = ?
+        """,
+        (gap_id,),
+    ).fetchone()
+    return str(found["url"]) if found and found["url"] else ""
 
 
 def first_url(text: str) -> str:
@@ -259,6 +278,7 @@ def label_for_change(change_type: str) -> str:
         "schema_update": "Structured data / JSON-LD",
         "metadata_update": "Title or metadata field",
         "html_visibility": "Crawler or rendered HTML access",
+        "trust_distribution": "Trust, reviews, or AI distribution",
         "content_update": "Page section",
     }.get(change_type, "Page section")
 
@@ -275,6 +295,23 @@ def import_metadata(conn, run_id: str, run_dir: Path | None) -> None:
             continue
         label = heading.group(2) if heading and heading.group(2) else clean_inline(url)
         url_id = db.upsert_url(conn, url, brand=infer_brand(url))
+        fetch_timestamp = field_value(section, "Fetch timestamp")
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO run_url_targets(
+                run_id, url_id, selection_source, selected_at, audit_profile, model
+            )
+            VALUES(?, ?, ?, ?, ?, ?)
+            """,
+            (
+                run_id,
+                url_id,
+                "artifact_import",
+                fetch_timestamp or None,
+                "metadata_light",
+                "artifact_import",
+            ),
+        )
         conn.execute(
             """
             INSERT INTO metadata_snapshots(
@@ -304,7 +341,7 @@ def import_metadata(conn, run_id: str, run_dir: Path | None) -> None:
                 field_value(section, "Fetch status"),
                 section[:5000],
                 rel(path),
-                field_value(section, "Fetch timestamp"),
+                fetch_timestamp,
             ),
         )
 
@@ -343,17 +380,34 @@ def import_literature_sources(conn, run_id: str) -> None:
             )
 
 
+def gap_research_sections(text: str) -> list[str]:
+    starts = [match.start() for match in re.finditer(r"(?m)^(?:###\s+|\*\*)GAP-\d+", text or "")]
+    if not starts:
+        return []
+    starts.append(len(text))
+    return [text[starts[index] : starts[index + 1]].strip() for index in range(len(starts) - 1)]
+
+
+def gap_research_heading(section: str) -> tuple[str, str, str] | None:
+    heading = re.match(
+        r"^(?:###\s+|\*\*)(GAP-\d+)\s*(?:[|—-]\s*([^|*\n]+?))?(?:\s*[|—-]\s*(C\d+))?(?:\*\*)?",
+        section,
+    )
+    if not heading:
+        return None
+    return heading.group(1), clean_inline(heading.group(2) or ""), heading.group(3) or ""
+
+
 def import_gap_research_sources(conn, run_id: str, run_dir: Path | None) -> None:
     if not run_dir:
         return
     text = read_text(run_dir / "gap_research.md")
-    for section in split_sections(text, r"###\s+GAP-\d+"):
-        heading = re.match(r"^###\s+(GAP-\d+)\s*\|\s*([^|]+)?(?:\|\s*(C\d+))?", section)
+    for section in gap_research_sections(text):
+        heading = gap_research_heading(section)
         if not heading:
             continue
-        source_gap = heading.group(1)
+        source_gap, title, criterion_code = heading
         gap_id = migrated_gap_id(run_id, source_gap)
-        criterion_code = heading.group(3) or ""
         criterion_id = db.criterion_id_for_code(conn, run_id, criterion_code)
         urls = urls_in(section)
         for index, url in enumerate(urls, start=1):
@@ -365,7 +419,7 @@ def import_gap_research_sources(conn, run_id: str, run_dir: Path | None) -> None
                 domain=domain_for(url),
                 title=domain_for(url) or source_gap,
                 source_type="gap_research",
-                headline=clean_inline(heading.group(0)),
+                headline=f"{source_gap} {title}".strip(),
                 finding_group=source_gap,
                 full_excerpt=section[:8000],
                 ai_assessment_prose=first_sentence(

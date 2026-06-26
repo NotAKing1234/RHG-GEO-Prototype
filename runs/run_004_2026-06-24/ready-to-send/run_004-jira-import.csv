@@ -1,0 +1,137 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_004,Radisson GEO Optimization - run_004,Epic container for 15 GEO optimization stories generated from run_004.,Highest,GEO,Platform,- Epic delivered when all 15 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_004,"Serve HTTP 200 HTML for all public Country Inn brand and hotel pages selected in run_004, especially /en-us/brand/country-inn, /en-us/brand/","Dev change specs: Serve HTTP 200 HTML for all public Country Inn brand and hotel pages selected in run_004, especially /en-us/brand/country-inn, /en-us/brand/country-inn/business-travel-offer, and the selected /en-us/hotels/country-inn-* pages. Keep bot defense behavioral and rate-based rather than returning the Radisson/Akamai access-restricted template to normal search and AI retrieval crawlers. Validate with the same direct GET capture used in runs/run_004_2026-06-24/audit_capture.json.
+
+SEO/GEO rationale: Public AI/search crawler access for audited pages: The audited URL and domain root return HTTP 200 or indexable redirects for normal browser requests and major retrieval crawlers; /robots.txt is reachable; no WAF/access template blocks the page; pages are eligible for snippets/indexing.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",Highest,GEO;Commerce,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-001 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"Restore crawlable /en-us/ Country Inn brand, about, business-travel, breakfast, renovated-hotels, featured-hotels, sitemap, hotel overview, ","Dev change specs: Restore crawlable /en-us/ Country Inn brand, about, business-travel, breakfast, renovated-hotels, featured-hotels, sitemap, hotel overview, and hotel subpages. Add reciprocal hreflang links and x-default from accessible localized pages to the English/US equivalents, and confirm that the English/US pages return their own title/meta/canonical instead of the access-restricted template.
+
+SEO/GEO rationale: Multilingual pages identify the correct locale and canonical relationship: Page declares appropriate lang, locale-aware title/meta, canonical URL, and hreflang alternates; localized pages are not thin duplicates with mismatched country/region signals.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-002 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,Serve https://www.radissonhotels.com/sitemap.xml or a sitemap-index URL as HTTP 200 XML,"Dev change specs: Serve https://www.radissonhotels.com/sitemap.xml or a sitemap-index URL as HTTP 200 XML. Include canonical public pages only, split by locale, brand, and hotel where needed, reference the sitemap in /robots.txt, and exclude banner-test or non-production URLs.
+
+SEO/GEO rationale: Public AI/search crawler access for audited pages: The audited URL and domain root return HTTP 200 or indexable redirects for normal browser requests and major retrieval crawlers; /robots.txt is reachable; no WAF/access template blocks the page; pages are eligible for snippets/indexing.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/sitemap.xml and rerun GEO audit.",Highest,GEO;Platform,Platform,"- Proposed change is implemented for https://www.radissonhotels.com/sitemap.xml.
+- Validation confirms the run_004_GAP-003 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"Add validated Hotel or LodgingBusiness JSON-LD to every Country Inn hotel overview page with name, url, brand, description, address, geo, te","Dev change specs: Add validated Hotel or LodgingBusiness JSON-LD to every Country Inn hotel overview page with name, url, brand, description, address, geo, telephone, image, amenityFeature, checkInTime, checkOutTime, aggregateRating where valid, and a booking potentialAction or direct booking URL. Keep Organization schema for brand/corporate pages, but do not use it as a substitute for hotel entity markup.
+
+SEO/GEO rationale: Valid Hotel or LodgingBusiness JSON-LD with useful hotel facts: Page contains valid JSON-LD using Hotel, LodgingBusiness, or a relevant subtype with visible-page-aligned fields: name, URL, address, geo, telephone, image, description, amenityFeature, aggregateRating/reviews where available, checkInTime/checkOutTime, starRating, and priceRange or offer data when applicable.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/fi-fi/tuotemerkki/country-inn and rerun GEO audit.",Highest,GEO;Commerce;Schema;Content,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/fi-fi/tuotemerkki/country-inn.
+- Validation confirms the run_004_GAP-005 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,Return HTTP 200 for the 9 selected Country Inn hotel overview pages and 6 selected Bathinda hotel subpages,"Dev change specs: Return HTTP 200 for the 9 selected Country Inn hotel overview pages and 6 selected Bathinda hotel subpages. For each property, expose canonical URL, reciprocal hreflang, address, geo, telephone, room/amenity data, meeting/dining/local-attraction sections, review route, and direct booking deep links. Use the same fields in visible copy and Hotel JSON-LD.
+
+SEO/GEO rationale: Machine-readable local/place details for individual hotel pages: Individual hotel pages expose address, locality, country, geo coordinates, telephone, opening/check-in details, reviews, business category, and reservation/booking route; details are consistent with Google Business Profile and major OTAs.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/hotels/country-inn-bathinda and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Schema;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/hotels/country-inn-bathinda.
+- Validation confirms the run_004_GAP-006 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,Add a crawlable /en-us/brand/country-inn/business-leisure-europe or equivalent hub for American travelers planning Europe work trips with we,"Dev change specs: Add a crawlable /en-us/brand/country-inn/business-leisure-europe or equivalent hub for American travelers planning Europe work trips with weekend stays. Link to relevant hotel/city pages and include work amenities, weekend attractions, transit, breakfast/Wi-Fi, loyalty benefits, direct booking support, and customer-service trust cues.
+
+SEO/GEO rationale: Meaningful hotel imagery has descriptive alt text and relevant structured image URLs: Meaningful images have descriptive alt text; structured data image fields are crawlable; hero/room/amenity images are not all unlabeled or generic.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",Highest,GEO;Commerce;FAQPage,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-013 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,Start a three-track AI distribution roadmap: (a) evaluate an OpenAI Apps SDK / ChatGPT app that searches Radisson inventory and deep-links t,"Dev change specs: Start a three-track AI distribution roadmap: (a) evaluate an OpenAI Apps SDK / ChatGPT app that searches Radisson inventory and deep-links to direct booking; (b) evaluate Claude connector or MCP-style hotel-search endpoint with live availability, policies, loyalty-safe flows, and booking links; (c) expose a public hotel-search/feed layer that keeps OTA, sitemap, schema, and direct-booking data in parity.
+
+SEO/GEO rationale: Brand can participate in assistant/app/connector travel flows: Brand has a documented AI app/connector/API/feed route or page structure that exposes live availability, rates, room details, booking links, and policies to assistant surfaces.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",Highest,GEO;Commerce;Schema,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-015 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"Add a reusable Country Inn work-leisure module to brand and hotel pages: desk/workspace, Wi-Fi, breakfast, meeting room, parking, late check","Dev change specs: Add a reusable Country Inn work-leisure module to brand and hotel pages: desk/workspace, Wi-Fi, breakfast, meeting room, parking, late checkout where offered, transit access, and nearby leisure. Map the same fields into amenityFeature on hotel pages. Prioritize making the English/US business-travel page and selected hotel meeting-events page crawlable first.
+
+SEO/GEO rationale: Meeting, workspace, breakfast, parking, Wi-Fi, wellness, and leisure amenities are scannable: Amenities appear in schema amenityFeature, tables, bullets, or clear sections; business amenities and leisure amenities are both present when relevant; meeting-room capacity and breakfast/parking/Wi-Fi are explicit if offered.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/fr-fr/marque/country-inn/offres-voyage-d-affaires and rerun GEO audit.",High,GEO;MeetingsandEvents,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/fr-fr/marque/country-inn/offres-voyage-d-affaires.
+- Validation confirms the run_004_GAP-007 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"Add city, neighborhood, airport/train distance, business district, landmark, parking/shuttle, and public-transit fields to each Country Inn ","Dev change specs: Add city, neighborhood, airport/train distance, business district, landmark, parking/shuttle, and public-transit fields to each Country Inn hotel page and selected brand/destination modules. Where a page is brand-level, link to city/property pages with named examples instead of leaving metadata generic.
+
+SEO/GEO rationale: Page names actionable places, districts, transit, airports, and attractions: Page names city, country, neighborhood or district, nearby train/airport/metro access, and at least two business or leisure landmarks where relevant.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/fi-fi/tuotemerkki/country-inn and rerun GEO audit.",High,GEO;Commerce,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/fi-fi/tuotemerkki/country-inn.
+- Validation confirms the run_004_GAP-008 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,Add visible FAQ blocks and matching FAQPage JSON-LD where the Q&A appears on page,"Dev change specs: Add visible FAQ blocks and matching FAQPage JSON-LD where the Q&A appears on page. Start with questions about check-in/out, breakfast, Wi-Fi, parking, accessibility, business amenities, meeting rooms, transit, local attractions, and weekend leisure add-ons. Do not add hidden or unsupported FAQ schema.
+
+SEO/GEO rationale: Real traveler questions answered visibly, with FAQPage only when accurate: Page includes visible Q&A for real traveler decisions and, where schema is used, FAQPage/Question/Answer JSON-LD exactly matches visible questions and answers without promotional stuffing.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/fr-fr/marque/country-inn and rerun GEO audit.",High,GEO;MeetingsandEvents;Schema;FAQPage;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/fr-fr/marque/country-inn.
+- Validation confirms the run_004_GAP-009 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"Move banner-tests URLs behind authentication or return noindex via meta robots or X-Robots-Tag; remove them from XML sitemaps, registry sele","Dev change specs: Move banner-tests URLs behind authentication or return noindex via meta robots or X-Robots-Tag; remove them from XML sitemaps, registry selection, and future run targets. Add a pre-run selection check that rejects public URLs with empty title, meta description, canonical, OG fields, and structured data unless explicitly marked as test-only.
+
+SEO/GEO rationale: GEO changes avoid manipulative markup and invisible claims: Structured data only describes visible page content; no fake reviews, hidden Q&A, irrelevant entity types, or unsupported claims; recommended properties are complete where used.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/sv-se/marke/country-inn/banner-tests and rerun GEO audit.",High,GEO;Platform;Schema;Content,Platform,"- Proposed change is implemented for https://www.radissonhotels.com/sv-se/marke/country-inn/banner-tests.
+- Validation confirms the run_004_GAP-010 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"Create Country Inn metadata/content clusters that combine ""US traveler + Europe destination + business need + leisure need + amenity + booki","Dev change specs: Create Country Inn metadata/content clusters that combine ""US traveler + Europe destination + business need + leisure need + amenity + booking constraint."" For example: ""Country Inn hotels for US business travelers in Europe with free breakfast, Wi-Fi, meeting access, and weekend sightseeing nearby."" Apply this to title/meta where appropriate, first-screen copy, FAQ blocks, and hotel page modules.
+
+SEO/GEO rationale: Page answers multi-intent travel subqueries generated by AI Mode/query fan-out: Title, meta description, headings, and body copy cover at least three linked sub-intents such as city/region, hotel type, meeting/work amenities, breakfast/parking, leisure proximity, and booking trust.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/fi-fi/tuotemerkki/country-inn and rerun GEO audit.",High,GEO;MeetingsandEvents;FAQPage;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/fi-fi/tuotemerkki/country-inn.
+- Validation confirms the run_004_GAP-011 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,Unblock selected hotel review pages and add visible review summaries plus valid aggregateRating/Review markup where Radisson owns or can law,"Dev change specs: Unblock selected hotel review pages and add visible review summaries plus valid aggregateRating/Review markup where Radisson owns or can lawfully display the review data. Include review count, rating, review source, and recency in visible copy, and keep claims consistent across official hotel pages, Google Business Profile, and OTAs.
+
+SEO/GEO rationale: Review/rating and third-party trust signals are exposed and current: Page or linked booking/listing ecosystem exposes recent reviews, aggregate rating, review count, trusted awards/editorial mentions, and consistent claims across Booking.com, Expedia, Tripadvisor, Google, and brand pages.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",High,GEO;Commerce;Content,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-014 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"Add /llms.txt with a short official Radisson Hotel Group overview, supported domains, core brands, booking paths, canonical Country Inn bran","Dev change specs: Add /llms.txt with a short official Radisson Hotel Group overview, supported domains, core brands, booking paths, canonical Country Inn brand/hotel URLs, US-to-Europe traveler guidance, and links to XML sitemaps. Keep it factual and update it from the same canonical source as sitemap/brand navigation.
+
+SEO/GEO rationale: Public AI/search crawler access for audited pages: The audited URL and domain root return HTTP 200 or indexable redirects for normal browser requests and major retrieval crawlers; /robots.txt is reachable; no WAF/access template blocks the page; pages are eligible for snippets/indexing.
+
+GEO visibility score: P3 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/llms.txt and rerun GEO audit.",Medium,GEO;Commerce;Schema,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/llms.txt.
+- Validation confirms the run_004_GAP-004 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_004,"After unblocking the English/US pages, add page-specific OG images and gallery alt text for rooms, desks, meeting rooms, breakfast, exterior","Dev change specs: After unblocking the English/US pages, add page-specific OG images and gallery alt text for rooms, desks, meeting rooms, breakfast, exterior, transit, and nearby attractions. Tie image fields into Hotel JSON-LD where valid and avoid keyword-stuffed alt text.
+
+SEO/GEO rationale: Meaningful hotel imagery has descriptive alt text and relevant structured image URLs: Meaningful images have descriptive alt text; structured data image fields are crawlable; hero/room/amenity images are not all unlabeled or generic.
+
+GEO visibility score: P3 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",Medium,GEO;MeetingsandEvents;Schema,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-012 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_005,Radisson GEO Optimization - run_005,Epic container for 8 GEO optimization stories generated from run_005.,Highest,GEO,Platform,- Epic delivered when all 8 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_005,"Restore HTTP 200 page-specific HTML for all public Park Plaza en-us brand, destination, hotel, meeting-event, and offer URLs selected in run","Dev change specs: Restore HTTP 200 page-specific HTML for all public Park Plaza en-us brand, destination, hotel, meeting-event, and offer URLs selected in run_005, starting with https://www.radissonhotels.com/en-us/brand/park-plaza. Add CDN/WAF allow rules for verified Googlebot, Bingbot, OAI-SearchBot, ChatGPT-User, and PerplexityBot where policy permits, and use rate limits or 429 responses for abuse instead of the access-restricted template. Validate with a 478-URL recrawl that confirms unique page titles, body fingerprints, and schema/content extraction per URL.
+
+SEO/GEO rationale: Public AI/search crawler access for every selected page: The audited URL returns HTTP 200 useful HTML or an indexable redirect; failures such as 403, AccessDenied, timeout, empty HTML, or blocked templates are recorded precisely.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/park-plaza and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Schema;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/park-plaza.
+- Validation confirms the run_005_GAP-001 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

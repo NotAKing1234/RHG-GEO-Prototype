@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_004,Radisson GEO Optimization - run_004,Epic container for 15 GEO optimization stories generated from run_004.,Highest,GEO,Platform,- Epic delivered when all 15 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_004,"Restore crawlable /en-us/ Country Inn brand, about, business-travel, breakfast, renovated-hotels, featured-hotels, sitemap, hotel overview, ","Dev change specs: Restore crawlable /en-us/ Country Inn brand, about, business-travel, breakfast, renovated-hotels, featured-hotels, sitemap, hotel overview, and hotel subpages. Add reciprocal hreflang links and x-default from accessible localized pages to the English/US equivalents, and confirm that the English/US pages return their own title/meta/canonical instead of the access-restricted template.
+
+SEO/GEO rationale: Multilingual pages identify the correct locale and canonical relationship: Page declares appropriate lang, locale-aware title/meta, canonical URL, and hreflang alternates; localized pages are not thin duplicates with mismatched country/region signals.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-002 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

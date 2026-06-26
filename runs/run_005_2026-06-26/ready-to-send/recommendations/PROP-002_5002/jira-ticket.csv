@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_005,Radisson GEO Optimization - run_005,Epic container for 8 GEO optimization stories generated from run_005.,Highest,GEO,Platform,- Epic delivered when all 8 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_005,"After access is restored, run a locale QA pass for every selected en-us Park Plaza URL","Dev change specs: After access is restored, run a locale QA pass for every selected en-us Park Plaza URL. Require each page to return US-English content, a self-referencing canonical, reciprocal hreflang alternates for equivalent language/region pages, and no canonical or hreflang reference to the access-restricted template. Start validation from https://www.radissonhotels.com/en-us/brand/park-plaza and extend it to all 478 selected URLs.
+
+SEO/GEO rationale: English/US and European localized pages expose coherent language, canonical, and alternate signals: HTML lang, canonical, hreflang alternates, title/meta language, and URL locale are consistent with the selected page purpose.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/park-plaza and rerun GEO audit.",Highest,GEO;Platform;Content,Platform,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/park-plaza.
+- Validation confirms the run_005_GAP-002 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

@@ -1,0 +1,52 @@
+source_id,title_or_url,url,finding_group,related_recommendations,assessment
+1247,developers.google.com,https://developers.google.com/search/docs/appearance/ai-features,literature,,
+1248,developers.google.com,https://developers.google.com/search/docs/fundamentals/ai-optimization-guide,literature,,
+1249,help.openai.com,https://help.openai.com/en/articles/9237897-chatgpt-search,literature,,
+1250,openai.com,https://openai.com/index/introducing-apps-in-chatgpt/,literature,,
+1251,expedia.com,https://www.expedia.com/newsroom/plan-your-next-trip-with-expedia-in-claude/,literature,,
+1252,ir.expediagroup.com,https://ir.expediagroup.com/news-and-events/news/news-details/2026/Expedia-Group-Reveals-The-AI-Trust-Gap-Travelers-Embrace-AI-for-Planning-but-Rely-on-Trusted-Brands-to-Book/default.aspx,literature,,
+1253,kayak.com,https://www.kayak.com/news/ai-mode/,literature,,
+1254,developers.google.com,https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data,literature,,
+1255,developers.google.com,https://developers.google.com/search/docs/appearance/structured-data/sd-policies,literature,,
+1256,developers.google.com,https://developers.google.com/search/docs/appearance/structured-data/local-business,literature,,
+1257,schema.org,https://schema.org/Hotel,literature,,
+1258,schema.org,https://schema.org/LodgingBusiness,literature,,
+1259,schema.org,https://schema.org/amenityFeature,literature,,
+1260,news.booking.com,https://news.booking.com/the-era-of-you-bookingcom-predicts-the-top-trends-defining-travel-in-2026-with-individuality-taking-center-stage/,literature,,
+1261,booking.com,https://www.booking.com/city/gb/london.en-gb.html,literature,,
+1262,expedia.com,https://www.expedia.com/London-Hotels.d178279.Travel-Guide-Hotels,literature,,
+1263,5wpr.com,https://www.5wpr.com/ai-visibility-index/airlines-hotels-ai-visibility-index-2026/,literature,,
+1264,meltwater.com,https://www.meltwater.com/en/blog/online-travel-platform-ai-visibility-index,literature,,
+1265,developers.google.com,https://developers.google.com/crawling/docs/troubleshooting/http-status-codes,GAP-001,5001,Serve page-specific public HTML with HTTP 200 to normal users and verified search/AI crawlers.
+1266,developers.google.com,https://developers.google.com/search/docs/appearance/ai-features,GAP-001,5001,Serve page-specific public HTML with HTTP 200 to normal users and verified search/AI crawlers.
+1267,developers.openai.com,https://developers.openai.com/api/docs/bots,GAP-001,5001,Serve page-specific public HTML with HTTP 200 to normal users and verified search/AI crawlers.
+1268,docs.perplexity.ai,https://docs.perplexity.ai/docs/resources/perplexity-crawlers,GAP-001,5001,Serve page-specific public HTML with HTTP 200 to normal users and verified search/AI crawlers.
+1269,hilton.com,https://www.hilton.com/en/hotels/orygigi-hilton-garden-inn-paris-la-villette/,GAP-001,5001,Serve page-specific public HTML with HTTP 200 to normal users and verified search/AI crawlers.
+1270,developers.google.com,https://developers.google.com/search/docs/specialty/international/localized-versions,GAP-002,5002,"Each English/US URL should return crawlable US-English content, a self-referencing canonical, reciprocal hreflang alternates for other language/region versions, and a sensible x-default or catchall where applicable."
+1271,developers.google.com,https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls,GAP-002,5002,"Each English/US URL should return crawlable US-English content, a self-referencing canonical, reciprocal hreflang alternates for other language/region versions, and a sensible x-default or catchall where applicable."
+1272,marriott.com,https://www.marriott.com/en-us/hotels/parar-ac-hotel-paris-porte-maillot/overview/,GAP-002,5002,"Each English/US URL should return crawlable US-English content, a self-referencing canonical, reciprocal hreflang alternates for other language/region versions, and a sensible x-default or catchall where applicable."
+1273,schema.org,https://schema.org/Hotel,GAP-003,5003,"Every hotel/property URL should expose visible facts plus JSON-LD using Hotel/LodgingBusiness: name, URL, @id, address, geo, phone, images, check-in/out, room count where available, amenities, pets/parking/Wi-Fi policies, ratings only when visible and compliant, and direct booking/offer fields where accurate."
+1274,schema.org,https://schema.org/docs/hotels.html,GAP-003,5003,"Every hotel/property URL should expose visible facts plus JSON-LD using Hotel/LodgingBusiness: name, URL, @id, address, geo, phone, images, check-in/out, room count where available, amenities, pets/parking/Wi-Fi policies, ratings only when visible and compliant, and direct booking/offer fields where accurate."
+1275,developers.google.com,https://developers.google.com/search/docs/appearance/structured-data/local-business,GAP-003,5003,"Every hotel/property URL should expose visible facts plus JSON-LD using Hotel/LodgingBusiness: name, URL, @id, address, geo, phone, images, check-in/out, room count where available, amenities, pets/parking/Wi-Fi policies, ratings only when visible and compliant, and direct booking/offer fields where accurate."
+1276,developers.google.com,https://developers.google.com/hotels/hotel-prices/structured-data/hotel-price-structured-data,GAP-003,5003,"Every hotel/property URL should expose visible facts plus JSON-LD using Hotel/LodgingBusiness: name, URL, @id, address, geo, phone, images, check-in/out, room count where available, amenities, pets/parking/Wi-Fi policies, ratings only when visible and compliant, and direct booking/offer fields where accurate."
+1277,marriott.com,https://www.marriott.com/en-us/hotels/parar-ac-hotel-paris-porte-maillot/overview/,GAP-003,5003,"Every hotel/property URL should expose visible facts plus JSON-LD using Hotel/LodgingBusiness: name, URL, @id, address, geo, phone, images, check-in/out, room count where available, amenities, pets/parking/Wi-Fi policies, ratings only when visible and compliant, and direct booking/offer fields where accurate."
+1278,schema.org,https://schema.org/MeetingRoom,GAP-004,5004,"Meeting pages should be crawlable landing pages, not opaque picklists."
+1279,schema.org,https://schema.org/maximumAttendeeCapacity,GAP-004,5004,"Meeting pages should be crawlable landing pages, not opaque picklists."
+1280,developers.google.com,https://developers.google.com/search/docs/appearance/structured-data/event,GAP-004,5004,"Meeting pages should be crawlable landing pages, not opaque picklists."
+1281,hilton.com,https://www.hilton.com/en/hotels/brugrhi-hilton-brussels-grand-place/events/,GAP-004,5004,"Meeting pages should be crawlable landing pages, not opaque picklists."
+1282,schema.org,https://schema.org/Offer,GAP-005,5005,"Offer pages should be public, crawlable, and precise: offer name, discount, book-by/stay dates, participating hotels, eligibility, payment/refund/cancellation terms, loyalty benefits, support path, and official booking CTA."
+1283,schema.org,https://schema.org/validThrough,GAP-005,5005,"Offer pages should be public, crawlable, and precise: offer name, discount, book-by/stay dates, participating hotels, eligibility, payment/refund/cancellation terms, loyalty benefits, support path, and official booking CTA."
+1284,developers.google.com,https://developers.google.com/hotels/hotel-prices/structured-data/hotel-price-structured-data,GAP-005,5005,"Offer pages should be public, crawlable, and precise: offer name, discount, book-by/stay dates, participating hotels, eligibility, payment/refund/cancellation terms, loyalty benefits, support path, and official booking CTA."
+1285,hilton.com,https://www.hilton.com/en/offers/the-hilton-sale-europe-and-africa-2000001516/,GAP-005,5005,"Offer pages should be public, crawlable, and precise: offer name, discount, book-by/stay dates, participating hotels, eligibility, payment/refund/cancellation terms, loyalty benefits, support path, and official booking CTA."
+1286,developers.google.com,https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap,GAP-006,5006,"The root sitemap endpoint should return public XML or a sitemap index with canonical URLs, stay under protocol limits, be UTF-8 encoded, and be referenced in robots.txt."
+1287,sitemaps.org,https://www.sitemaps.org/protocol.html,GAP-006,5006,"The root sitemap endpoint should return public XML or a sitemap index with canonical URLs, stay under protocol limits, be UTF-8 encoded, and be referenced in robots.txt."
+1288,hyatt.com,https://www.hyatt.com/robots.txt,GAP-006,5006,"The root sitemap endpoint should return public XML or a sitemap index with canonical URLs, stay under protocol limits, be UTF-8 encoded, and be referenced in robots.txt."
+1289,radissonhotels.com,https://www.radissonhotels.com/sitemap.xml`,GAP-006,5006,"The root sitemap endpoint should return public XML or a sitemap index with canonical URLs, stay under protocol limits, be UTF-8 encoded, and be referenced in robots.txt."
+1290,developer.chrome.com,https://developer.chrome.com/docs/lighthouse/agentic-browsing/llms-txt,GAP-007,5007,Treat llms.txt as optional but useful.
+1291,llmstxt.org,https://llmstxt.org/,GAP-007,5007,Treat llms.txt as optional but useful.
+1292,skyscanner.com,https://www.skyscanner.com/llms.txt,GAP-007,5007,Treat llms.txt as optional but useful.
+1293,radissonhotels.com,https://www.radissonhotels.com/llms.txt`,GAP-007,5007,Treat llms.txt as optional but useful.
+1294,developers.google.com,https://developers.google.com/crawling/docs/faceted-navigation,GAP-008,5008,"Sitemaps and GEO target sets should contain only canonical, indexable, production landing pages."
+1295,developers.google.com,https://developers.google.com/search/docs/crawling-indexing/block-indexing,GAP-008,5008,"Sitemaps and GEO target sets should contain only canonical, indexable, production landing pages."
+1296,developers.google.com,https://developers.google.com/search/docs/crawling-indexing/url-structure,GAP-008,5008,"Sitemaps and GEO target sets should contain only canonical, indexable, production landing pages."
+1297,hyatt.com,https://www.hyatt.com/robots.txt,GAP-008,5008,"Sitemaps and GEO target sets should contain only canonical, indexable, production landing pages."

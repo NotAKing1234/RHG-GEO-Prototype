@@ -29,8 +29,9 @@ from scripts.dashboard_read_model import (  # noqa: E402
     csv_export,
     dashboard_payload,
     dashboard_runs,
+    latest_run_id,
 )
-from scripts.export import export_all, jira_csv_content, write_next_geo_run  # noqa: E402
+from scripts.export import export_all, jira_csv_content, validate_run_id, write_next_geo_run  # noqa: E402
 from scripts.import_run_artifacts import import_all_runs, import_run as import_single_run  # noqa: E402
 from scripts.migrate_to_sqlite import migrate  # noqa: E402
 
@@ -38,6 +39,7 @@ from scripts.migrate_to_sqlite import migrate  # noqa: E402
 GEO_DB_PATH = db.DB_PATH
 JIRA_CSV_FIELDS = db.JIRA_FIELDS
 MAX_ACTIVE_TARGETS_FOR_RUN_SCOPE = 500
+ALLOWED_EXPORT_TYPES = {"jira_csv", "json", "csv", "clipboard", "audit"}
 
 MODEL_PRICES_PER_MILLION = {
     "gpt-5.4-mini": {"input": 0.75, "output": 4.50},
@@ -237,6 +239,7 @@ def save_registry_selection(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def export_jira_csv(run_id: str, data: dict[str, Any] | None = None, proposal_id: str | None = None) -> dict[str, Any]:
+    run_id = validate_run_id(run_id)
     ensure_db()
     with db.connection(GEO_DB_PATH) as conn:
         content = jira_csv_content(conn, run_id, proposal_id=proposal_id)
@@ -244,6 +247,9 @@ def export_jira_csv(run_id: str, data: dict[str, Any] | None = None, proposal_id
 
 
 def export_dashboard(run_id: str, export_type: str, proposal_id: str | None = None) -> dict[str, Any]:
+    run_id = validate_run_id(run_id)
+    if export_type not in ALLOWED_EXPORT_TYPES:
+        raise ValueError(f"Unsupported dashboard export type: {export_type}")
     ensure_db()
     if export_type == "jira_csv":
         return export_jira_csv(run_id, proposal_id=proposal_id)
@@ -257,8 +263,6 @@ def export_dashboard(run_id: str, export_type: str, proposal_id: str | None = No
         return {"type": "clipboard", "filename": f"{run_id}_handoff.txt", "content": clipboard_export(payload)}
     if export_type == "audit":
         return {"type": "audit", "filename": f"{run_id}_audit.txt", "content": audit_export(payload)}
-    export_all(run_id, GEO_DB_PATH)
-    return {"type": export_type, "filename": f"{run_id}_{export_type}.txt", "content": f"Exports regenerated for {run_id}."}
 
 
 class DashboardHandler(BaseHTTPRequestHandler):
@@ -318,7 +322,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 offset = int(query.get("offset", ["0"])[0])
                 self.send_json(registry_payload(registry_filter_from_query(query), limit=limit, offset=offset))
             elif parsed.path == "/api/dashboard/export":
-                run_id = query.get("run_id", query.get("runId", ["run_003"]))[0]
+                run_id = query.get("run_id", query.get("runId", [None]))[0]
+                if not run_id:
+                    ensure_db()
+                    with db.connection(GEO_DB_PATH) as conn:
+                        run_id = latest_run_id(conn)
+                if not run_id:
+                    self.send_error_json("No run_id supplied and no runs are available", 400)
+                    return
                 export_type = query.get("type", ["json"])[0]
                 proposal_id = query.get("proposal_id", query.get("proposalId", [None]))[0]
                 self.send_json(export_dashboard(run_id, export_type, proposal_id=proposal_id))

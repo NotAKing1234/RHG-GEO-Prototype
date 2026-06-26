@@ -8,15 +8,30 @@ Pitfall: keep frontend field names stable while the storage model changes undern
 from __future__ import annotations
 
 import json
+import ipaddress
 import re
+import socket
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from scripts import db
+from scripts.dashboard_domain import (
+    change_suggestion_summary,
+    handoff_readiness_for,
+    has_selector_warning,
+    normalize_change_type,
+    priority_score,
+    selector_status_for,
+    surface_for,
+    validation_error_messages,
+    validation_warnings_for,
+    warning_to_dict,
+)
+
+FORMULA_PREFIXES = ("=", "+", "@", "\t", "\r")
 
 
 def latest_run_id(conn) -> str | None:
@@ -37,31 +52,6 @@ def dashboard_runs(conn) -> list[dict[str, Any]]:
 
 def proposal_public_id(value: Any) -> str:
     return str(value)
-
-
-def priority_score(priority_tier: str | None, severity: int | None, source_count: int) -> int:
-    base = {"P1": 88, "P2": 72, "P3": 55}.get((priority_tier or "P3").upper(), 48)
-    severity_boost = max(0, int(severity or 0) - 1) * 3
-    evidence_boost = min(4, source_count)
-    return min(99, base + severity_boost + evidence_boost)
-
-
-def selector_status_for(change_type: str | None, target_page: str | None) -> str:
-    if change_type in {"schema_update", "metadata_update"}:
-        return "metadata field target"
-    if target_page:
-        return "team override selector"
-    return "warning: selector not inferred"
-
-
-def surface_for(change_type: str | None, fallback: str | None) -> str:
-    if change_type == "schema_update":
-        return "Metadata / Structured Data"
-    if change_type == "metadata_update":
-        return "Metadata"
-    if change_type == "html_visibility":
-        return "Strategic / Infrastructure"
-    return fallback or "Front-end content"
 
 
 def source_ids_for_proposal(conn, proposal_id: int) -> list[int]:
@@ -152,20 +142,34 @@ def recommendations(conn, run_id: str) -> list[dict[str, Any]]:
         current_state = item.get("current_state") or item.get("gap_description") or ""
         proposed_change = item.get("proposed_change") or ""
         score = priority_score(item.get("priority_tier"), item.get("severity"), len(evidence_ids))
-        change_type = change.get("change_type")
+        change_type = normalize_change_type(change.get("change_type"))
+        target_page = change.get("target_page") or item.get("url") or ""
+        selector_status = selector_status_for(change_type, target_page)
+        ticket = jira_ticket_for(conn, run_id, proposal_id)
+        readiness = handoff_readiness_for(
+            {
+                "proposed_change": proposed_change,
+                "jira_ticket": ticket,
+                "evidence_source_ids": evidence_ids,
+                "selector_status": selector_status,
+            }
+        )
         recs.append(
             {
                 "proposal_id": public_id,
                 "source_proposal_id": item.get("source_proposal_id") or "",
                 "title": db.summarize_change(proposed_change),
                 "combined_score": score,
+                "change_type": change_type,
                 "surface": surface_for(change_type, item.get("page_type")),
-                "page_refs": [item["url"]] if item.get("url") else [],
+                "page_refs": [target_page] if target_page else [],
                 "section_label": change.get("target_field_or_section") or item.get("criterion_code") or "Page section",
                 "inferred_dom_selector": change.get("target_field_or_section") or "",
-                "selector_status": selector_status_for(change_type, item.get("url")),
-                "evidence_tier": "Implementation-ready" if evidence_ids else "Need review",
+                "selector_status": selector_status,
+                "evidence_tier": readiness.evidence_tier,
                 "evidence_source_ids": evidence_ids,
+                "handoff_status": readiness.status,
+                "readiness_blockers": list(readiness.blockers),
                 "priority_tier": item.get("priority_tier") or "",
                 "priority_components": {
                     "business_impact": min(5, max(1, int(item.get("severity") or 1) + 2)),
@@ -179,7 +183,7 @@ def recommendations(conn, run_id: str) -> list[dict[str, Any]]:
                 "impact_estimate": item.get("impact_estimate") or "",
                 "implementation_status": item.get("implementation_status") or "",
                 "before_after": {"before": current_state, "after": proposed_change},
-                "jira_ticket": jira_ticket_for(conn, run_id, proposal_id),
+                "jira_ticket": ticket,
                 "team_override": overrides.get(public_id) or {},
                 "gap_refs": [item.get("gap_id")],
                 "criterion_refs": [item.get("criterion_code")] if item.get("criterion_code") else [],
@@ -203,6 +207,8 @@ def metadata_changes(conn, run_id: str) -> list[dict[str, Any]]:
                 "metadata_change_id": item["change_id"],
                 "proposal_id": proposal_public_id(item["proposal_id"]),
                 "page": item.get("target_page") or "",
+                "raw_change_type": item.get("change_type") or "",
+                "change_type": normalize_change_type(item.get("change_type")),
                 "field_name": item.get("target_field_or_section") or item.get("change_type") or "Implementation field",
                 "current_value": item.get("current_value") or "",
                 "proposed_value": item.get("proposed_value") or "",
@@ -228,7 +234,7 @@ def copy_blocks(conn, run_id: str, recs: list[dict[str, Any]]) -> list[dict[str,
                 "target_page": item.get("target_page") or "",
                 "target_field_or_section": item.get("target_field_or_section") or "",
                 "copy_label": item.get("target_field_or_section") or "Proposed copy",
-                "format_type": item.get("change_type") or "content_update",
+                "format_type": normalize_change_type(item.get("change_type")),
                 "original_text": item.get("current_value") or "",
                 "export_value": item.get("proposed_value") or "",
                 "adjusted_text": adjusted.get(block_id) or "",
@@ -330,17 +336,22 @@ def sources(conn, run_id: str) -> list[dict[str, Any]]:
 
 
 def summary_for(run: dict[str, Any], recs: list[dict[str, Any]], source_values: list[dict[str, Any]], page_values: list[dict[str, Any]], changes: list[dict[str, Any]]) -> dict[str, Any]:
-    ready = [item for item in recs if item.get("evidence_tier") == "Implementation-ready" and not str(item.get("selector_status", "")).startswith("warning")]
+    ready = [item for item in recs if handoff_readiness_for(item).ready]
+    evidence_source_count = len(source_values)
+    audited_page_count = len(page_values)
     return {
         "recommendations": len(recs),
         "ready_to_send": len(ready),
         "needs_review": len(recs) - len(ready),
-        "sources": len(source_values),
-        "pages": len(page_values),
+        "sources": evidence_source_count,
+        "evidence_sources": evidence_source_count,
+        "pages": audited_page_count,
+        "reviewed_inputs": audited_page_count + evidence_source_count,
         "metadata_changes": len(changes),
         "copy_blocks": len(changes),
         "average_score": round(sum(int(item.get("combined_score") or 0) for item in recs) / max(1, len(recs)), 1),
-        "selector_warnings": sum(1 for item in recs if str(item.get("selector_status", "")).startswith("warning")),
+        "selector_warnings": sum(1 for item in recs if has_selector_warning(item.get("selector_status"))),
+        "change_suggestions": change_suggestion_summary(recs, changes),
         "crawl": {
             "blockedPages": sum(1 for page in page_values if re.search(r"403|blocked|restricted", page.get("metadata_snapshot", {}).get("fetch_status", ""), re.I)),
         },
@@ -359,8 +370,14 @@ def source_graph(source_values: list[dict[str, Any]], recs: list[dict[str, Any]]
 def dashboard_payload(conn, run_id: str | None = None) -> dict[str, Any]:
     run_id = run_id or latest_run_id(conn)
     if not run_id:
+        warnings = validation_warnings_for(None, [], [], [], [])
         return {
-            "run": {"run_id": "", "date": "", "validation_errors": ["No runs imported."]},
+            "run": {
+                "run_id": "",
+                "date": "",
+                "validation_errors": validation_error_messages(warnings),
+                "validation_warnings": [warning_to_dict(item) for item in warnings],
+            },
             "recommendations": [],
             "radisson_pages": [],
             "sources": [],
@@ -375,13 +392,13 @@ def dashboard_payload(conn, run_id: str | None = None) -> dict[str, Any]:
     page_values = pages(conn, run_id, recs)
     changes = metadata_changes(conn, run_id)
     copies = copy_blocks(conn, run_id, recs)
-    validation_errors = []
-    if not source_values:
-        validation_errors.append("No sources imported for this run.")
-    if not recs:
-        validation_errors.append("No proposals imported for this run.")
+    warnings = validation_warnings_for(run, recs, source_values, page_values, changes)
     payload = {
-        "run": {**(run or {"run_id": run_id, "date": "", "status": "UNKNOWN"}), "validation_errors": validation_errors},
+        "run": {
+            **(run or {"run_id": run_id, "date": "", "status": "UNKNOWN"}),
+            "validation_errors": validation_error_messages(warnings),
+            "validation_warnings": [warning_to_dict(item) for item in warnings],
+        },
         "recommendations": recs,
         "radisson_pages": page_values,
         "sources": source_values,
@@ -394,6 +411,7 @@ def dashboard_payload(conn, run_id: str | None = None) -> dict[str, Any]:
 
 
 def capture_page(conn, run_id: str, url: str) -> dict[str, Any]:
+    validate_capture_url(url)
     status = "captured"
     title = ""
     description = ""
@@ -436,6 +454,39 @@ def capture_page(conn, run_id: str, url: str) -> dict[str, Any]:
     return capture
 
 
+def validate_capture_url(url: str) -> None:
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("Capture URL must be an absolute http(s) URL.")
+    host = parsed.hostname
+    if host.lower() == "localhost" or host.lower().endswith(".localhost"):
+        raise ValueError("Capture URL host is not allowed.")
+    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    addresses: set[str] = set()
+    try:
+        addresses.add(str(ipaddress.ip_address(host)))
+    except ValueError:
+        try:
+            for item in socket.getaddrinfo(host, port, type=socket.SOCK_STREAM):
+                addresses.add(str(item[4][0]))
+        except socket.gaierror as exc:
+            raise ValueError(f"Capture URL host could not be resolved: {host}") from exc
+    for address in addresses:
+        ip = ipaddress.ip_address(address)
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved or ip.is_unspecified:
+            raise ValueError("Capture URL host is not allowed.")
+
+
+def csv_safe_value(value: Any) -> Any:
+    if not isinstance(value, str) or not value:
+        return value
+    if value.startswith(FORMULA_PREFIXES):
+        return f"'{value}"
+    if value.startswith("-") and len(value) > 1 and value[1] in "0123456789=+-@(":
+        return f"'{value}"
+    return value
+
+
 def csv_export(payload: dict[str, Any]) -> str:
     import csv
     import io
@@ -446,7 +497,7 @@ def csv_export(payload: dict[str, Any]) -> str:
     writer.writeheader()
     for rec in payload.get("recommendations", []):
         writer.writerow(
-            {
+            {field: csv_safe_value(value) for field, value in {
                 "proposal_id": rec.get("proposal_id"),
                 "title": rec.get("title"),
                 "score": rec.get("combined_score"),
@@ -455,7 +506,7 @@ def csv_export(payload: dict[str, Any]) -> str:
                 "pages": ";".join(rec.get("page_refs") or []),
                 "sources": ";".join(str(value) for value in rec.get("evidence_source_ids") or []),
                 "proposed_change": rec.get("proposed_change"),
-            }
+            }.items()}
         )
     return output.getvalue()
 

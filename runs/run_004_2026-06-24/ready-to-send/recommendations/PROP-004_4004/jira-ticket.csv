@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_004,Radisson GEO Optimization - run_004,Epic container for 15 GEO optimization stories generated from run_004.,Highest,GEO,Platform,- Epic delivered when all 15 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_004,"Add /llms.txt with a short official Radisson Hotel Group overview, supported domains, core brands, booking paths, canonical Country Inn bran","Dev change specs: Add /llms.txt with a short official Radisson Hotel Group overview, supported domains, core brands, booking paths, canonical Country Inn brand/hotel URLs, US-to-Europe traveler guidance, and links to XML sitemaps. Keep it factual and update it from the same canonical source as sitemap/brand navigation.
+
+SEO/GEO rationale: Public AI/search crawler access for audited pages: The audited URL and domain root return HTTP 200 or indexable redirects for normal browser requests and major retrieval crawlers; /robots.txt is reachable; no WAF/access template blocks the page; pages are eligible for snippets/indexing.
+
+GEO visibility score: P3 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/llms.txt and rerun GEO audit.",Medium,GEO;Commerce;Schema,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/llms.txt.
+- Validation confirms the run_004_GAP-004 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

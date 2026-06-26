@@ -16,12 +16,15 @@ This creates the run envelope in SQLite, creates the timestamped run folder, and
 Use the following execution rules on every run:
 
 - Always infer the current run number before doing any work.
-- Always read `/memory/master_summary.md` and `/memory/run_index.md` at the start of every run.
+- Always read `/memory/execution_log.md` when it exists, `/memory/master_summary.md`, and `/memory/run_index.md` at the start of every run.
 - Initialize the run with `python3 run.py --init`; it computes `NNN` from SQLite/run history and stores the active run pointer.
 - Compute `RUN_DATE` using the local current date in `YYYY-MM-DD` format.
 - Use the active run directory printed by `python3 run.py --init` before writing outputs.
 - When older instructions refer to `/runs/run_NNN/...`, interpret that as the active timestamped run directory `/runs/run_NNN_YYYY-MM-DD/...` for the current run.
 - Write all current-run outputs into the active run directory and do not write current-run artifacts anywhere else unless a phase explicitly names another destination such as `/framework/`, `/literature/`, `/memory/`, or `/inferred/`.
+- Treat the SQLite `run_url_targets` snapshot as a complete required workload. Do not sample or group selected links before all selected URLs have been individually checked and represented in the run artifacts.
+- Generated exports must use the active/current run ID; never rely on a stale dashboard/export default from an older run.
+- Automatically append meaningful repo/tool discussions, decisions, fixes, failures, verification notes, and follow-ups to `/memory/execution_log.md`; do not ask for confirmation before logging local learning.
 - Report progress at the start of each phase with a one-line status update.
 - Do not skip phases. Do not stop for confirmation between phases.
 
@@ -87,6 +90,13 @@ Load the target pages from SQLite `run_url_targets` for the active run created b
 
 Compatibility note: `/sources/website/run_targets/next_geo_run.csv` and `/sources/website/target_urls.md` are generated views for inspection and legacy tools. They are not the source of truth once the run has been initialized.
 
+Full coverage rule:
+
+- Audit every URL in the active run's SQLite `run_url_targets` snapshot.
+- Do not sample selected URLs, stop after representative pages, or rely on grouped coverage before every URL has a page-level audit record.
+- If a page is blocked, unavailable, empty, redirected, rate-limited, or otherwise uninspectable, still include it in `metadata_snapshot.md` with the exact fetch status and notes.
+- Before advancing past Phase 2, verify the count of selected DB target URLs equals the count of selected target URLs represented in `metadata_snapshot.md`.
+
 Audit rules:
 
 - Audit every Priority 1 page on every run.
@@ -147,6 +157,8 @@ For every identified gap, include:
 - Whether the gap appears new or recurring
 
 If no gaps are found for a page, state that explicitly rather than omitting the page.
+
+Additionally, `gap_analysis.md` must include either URL-specific gaps or a per-URL coverage matrix mapping every selected URL to its audit status and applicable gap IDs. Grouped recommendations are allowed only after this per-URL coverage is explicit.
 
 ## PHASE 2.5 — TARGETED GAP RESEARCH (sub-agent)
 After completing `gap_analysis.md`, spawn a focused sub-agent using the Task tool.
@@ -235,6 +247,8 @@ Proposal rules:
 ## PHASE 4 — LOG AND LEARN
 Store all run outputs under the active timestamped run directory `/runs/run_NNN_YYYY-MM-DD/`.
 
+Before completing any run or tooling-maintenance session, append a local learning entry to `/memory/execution_log.md`. Capture the date, run or task name, decisions made, files changed, verification performed, and unresolved follow-ups. This log is mandatory for everything material discussed or changed in the repo, even when the work is not a full GEO run.
+
 Write `/runs/run_NNN_YYYY-MM-DD/log_reflection.md` answering:
 
 - What gaps did I identify correctly versus miss compared to the last run?
@@ -259,6 +273,23 @@ Then update cross-run memory:
    - What did not change
    - What new gaps appeared
 
+4. Verify generated exports:
+   - Export filenames and CSV contents must show the active/current run ID.
+   - The active run folder must contain `ready-to-send/` with stakeholder-ready handoff assets:
+     - full Jira import CSV
+     - recommendation tracker CSV
+     - stakeholder email draft
+     - QA checklist
+     - source evidence, page coverage, metadata-change, and copy-block CSVs
+     - `jira-validation-report.md` proving every Jira CSV matches the expected field order
+     - one folder per recommendation with a brief, validated `jira-ticket.csv`, handoff note, acceptance checklist, and source evidence
+   - Do not overwrite phase-authored files such as `/literature/run_NNN_sources.md` or `/runs/run_NNN_YYYY-MM-DD/optimization_proposal.md` with compact generated views unless explicitly requested.
+
+5. Run completed-run smoke checks:
+   - Execute `python3 run.py --smoke --run-id run_NNN`.
+   - Treat any failure as blocking completion.
+   - This smoke gate must verify all selected URL targets are represented, exports use the active run ID, dashboard coverage counts are coherent, `ready-to-send/` exists with full assets, each ready item has a valid `jira-ticket.csv`, Phase 2.5 research produced source links, and `memory/execution_log.md` includes the run.
+
 Completion rules:
 
 - Do not overwrite `run_index.md`; append only.
@@ -273,6 +304,7 @@ Completion rules:
 # Section 4 — Memory Rules
 Memory loading rules are mandatory:
 
+- Always load `/memory/execution_log.md` when it exists, along with the run memory files, so recent local tool decisions influence the current work.
 - Always load `/memory/master_summary.md` and `/memory/run_index.md` at the start of every run.
 - Always load the two most recent `log_reflection.md` files from `/runs/`.
 - Never load full run folders automatically.

@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_004,Radisson GEO Optimization - run_004,Epic container for 15 GEO optimization stories generated from run_004.,Highest,GEO,Platform,- Epic delivered when all 15 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_004,Add a crawlable /en-us/brand/country-inn/business-leisure-europe or equivalent hub for American travelers planning Europe work trips with we,"Dev change specs: Add a crawlable /en-us/brand/country-inn/business-leisure-europe or equivalent hub for American travelers planning Europe work trips with weekend stays. Link to relevant hotel/city pages and include work amenities, weekend attractions, transit, breakfast/Wi-Fi, loyalty benefits, direct booking support, and customer-service trust cues.
+
+SEO/GEO rationale: Meaningful hotel imagery has descriptive alt text and relevant structured image URLs: Meaningful images have descriptive alt text; structured data image fields are crawlable; hero/room/amenity images are not all unlabeled or generic.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/country-inn and rerun GEO audit.",Highest,GEO;Commerce;FAQPage,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/country-inn.
+- Validation confirms the run_004_GAP-013 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

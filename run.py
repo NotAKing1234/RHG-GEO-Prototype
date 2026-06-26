@@ -18,7 +18,8 @@ from typing import Any
 
 from scripts import db
 from scripts.export import export_all
-from scripts.import_run_artifacts import import_all_runs
+from scripts.geo_run_smoke import SmokeFailure, metadata_snapshot_artifact_records, run_smoke
+from scripts.import_run_artifacts import import_all_runs, import_metadata, import_proposal_change, parse_proposal_details
 from scripts.migrate_to_sqlite import infer_brand, migrate, parse_criteria, parse_gaps, parse_proposals
 
 
@@ -91,12 +92,40 @@ def expected_files(state: dict[str, Any], phase: str | None = None) -> list[Path
     if phase == PHASE_3:
         return [run_dir / "optimization_proposal.md"]
     if phase == PHASE_4:
-        return [run_dir / "log_reflection.md", ROOT / "memory" / "master_summary.md"]
+        return [
+            run_dir / "log_reflection.md",
+            ROOT / "memory" / "master_summary.md",
+            ROOT / "memory" / "execution_log.md",
+        ]
     return []
 
 
 def missing_required_files(state: dict[str, Any], phase: str | None = None) -> list[Path]:
     return [path for path in expected_files(state, phase) if not path.exists() or path.stat().st_size == 0]
+
+
+def missing_phase_2_target_urls(state: dict[str, Any]) -> list[str]:
+    if state.get("current_phase") != PHASE_2:
+        return []
+    snapshot_path = ROOT / state["run_dir"] / "metadata_snapshot.md"
+    if not snapshot_path.exists():
+        return []
+    artifact_urls = set(metadata_snapshot_artifact_records(snapshot_path))
+    with db.connection(db.DB_PATH) as conn:
+        target_urls = [str(item["url"]) for item in db.run_target_urls(conn, state["run_id"])]
+    return [url for url in target_urls if url not in artifact_urls]
+
+
+def missing_phase_2_target_status_urls(state: dict[str, Any]) -> list[str]:
+    if state.get("current_phase") != PHASE_2:
+        return []
+    snapshot_path = ROOT / state["run_dir"] / "metadata_snapshot.md"
+    if not snapshot_path.exists():
+        return []
+    artifact_records = metadata_snapshot_artifact_records(snapshot_path)
+    with db.connection(db.DB_PATH) as conn:
+        target_urls = [str(item["url"]) for item in db.run_target_urls(conn, state["run_id"])]
+    return [url for url in target_urls if url in artifact_records and not artifact_records[url]]
 
 
 def urls_in(text: str) -> list[str]:
@@ -118,7 +147,7 @@ def source_title_for(url: str) -> str:
 def sync_phase_to_db(state: dict[str, Any], phase: str) -> None:
     run_id = state["run_id"]
     run_dir = ROOT / state["run_dir"]
-    with db.connection() as conn:
+    with db.connection(db.DB_PATH) as conn:
         if phase == PHASE_0:
             conn.execute("DELETE FROM source_insights WHERE run_id = ?", (run_id,))
             conn.execute("DELETE FROM sources WHERE run_id = ?", (run_id,))
@@ -143,6 +172,7 @@ def sync_phase_to_db(state: dict[str, Any], phase: str) -> None:
                     (cur.lastrowid, run_id, f"Literature source consulted: {url}"),
                 )
         elif phase == PHASE_2:
+            import_metadata(conn, run_id, run_dir)
             for item in parse_gaps(run_dir / "gap_analysis.md", run_id):
                 url_id = db.upsert_url(conn, item["url"], brand=infer_brand(item["url"])) if item["url"] else None
                 db.upsert_gap(
@@ -157,7 +187,10 @@ def sync_phase_to_db(state: dict[str, Any], phase: str) -> None:
                     description=item["description"],
                 )
         elif phase == PHASE_3:
+            conn.execute("DELETE FROM proposal_changes WHERE run_id = ?", (run_id,))
+            details = parse_proposal_details(run_dir / "optimization_proposal.md", run_id)
             for item in parse_proposals(run_dir / "optimization_proposal.md", run_id):
+                detail = details.get(item["proposal_id"], {})
                 existing_gap = conn.execute("SELECT gap_id FROM gaps WHERE gap_id = ?", (item["gap_id"],)).fetchone()
                 if not existing_gap:
                     db.upsert_gap(
@@ -176,22 +209,31 @@ def sync_phase_to_db(state: dict[str, Any], phase: str) -> None:
                     item["proposal_id"],
                     item["gap_id"],
                     run_id,
+                    source_proposal_id=item.get("source_proposal_id"),
                     proposed_change=item["proposed_change"],
+                    source_citation=detail.get("source_citation"),
+                    current_state=detail.get("current_state"),
+                    implementation_status=detail.get("implementation_status"),
                     priority_tier=item["priority_tier"],
                     impact_estimate=item["impact_estimate"],
                 )
+                import_proposal_change(conn, run_id, item, detail)
         elif phase == PHASE_3_5:
             db.build_jira_tickets(conn, run_id)
-        elif phase == PHASE_4:
-            conn.execute("UPDATE runs SET status = 'COMPLETED' WHERE run_id = ?", (run_id,))
-            conn.execute(
-                """
-                UPDATE urls
-                SET last_audited_run = ?
-                WHERE url_id IN (SELECT url_id FROM run_url_targets WHERE run_id = ?)
-                """,
-                (run_id, run_id),
-            )
+
+
+def mark_run_completed(state: dict[str, Any]) -> None:
+    run_id = state["run_id"]
+    with db.connection(db.DB_PATH) as conn:
+        conn.execute("UPDATE runs SET status = 'COMPLETED' WHERE run_id = ?", (run_id,))
+        conn.execute(
+            """
+            UPDATE urls
+            SET last_audited_run = ?
+            WHERE url_id IN (SELECT url_id FROM run_url_targets WHERE run_id = ?)
+            """,
+            (run_id, run_id),
+        )
 
 
 def print_phase_prompt(state: dict[str, Any]) -> None:
@@ -213,9 +255,12 @@ def print_phase_prompt(state: dict[str, Any]) -> None:
     elif phase == PHASE_3:
         print(f"Synthesize one proposal per gap and write {run_dir}/optimization_proposal.md.")
     elif phase == PHASE_3_5:
-        print("Run python3 run.py --next to build jira_tickets rows and exports from the DB.")
+        print("Run python3 run.py --next to build jira_tickets rows, DB exports, and the ready-to-send handoff bundle.")
     elif phase == PHASE_4:
-        print(f"Write {run_dir}/log_reflection.md, refresh memory/master_summary.md, and append memory/run_index.md.")
+        print(
+            f"Write {run_dir}/log_reflection.md, append memory/execution_log.md, "
+            "refresh memory/master_summary.md, and append memory/run_index.md."
+        )
 
 
 def ensure_db() -> None:
@@ -224,7 +269,7 @@ def ensure_db() -> None:
         if not result["valid"]:
             raise SystemExit(f"Migration validation failed: {result['mismatches']}")
     db.initialize_database(db.DB_PATH)
-    with db.connection() as conn:
+    with db.connection(db.DB_PATH) as conn:
         counts = db.table_counts(conn)
     if counts.get("runs", 0) and counts.get("sources", 0) == 0:
         import_all_runs(db.DB_PATH)
@@ -236,7 +281,7 @@ def init_run() -> int:
     if existing and existing.get("status") == "IN_PROGRESS":
         print(f"Active run already in progress: {existing['run_id']} ({existing['current_phase']}).")
         return 2
-    with db.connection() as conn:
+    with db.connection(db.DB_PATH) as conn:
         next_number = detect_next_run_number(conn)
         run_id = f"run_{next_number:03d}"
         run_date = datetime.now().strftime("%Y-%m-%d")
@@ -263,7 +308,7 @@ def init_run() -> int:
 def status() -> int:
     ensure_db()
     state = load_state()
-    with db.connection() as conn:
+    with db.connection(db.DB_PATH) as conn:
         counts = db.table_counts(conn)
         selected_count = len(db.selected_urls(conn))
     if not state:
@@ -278,6 +323,18 @@ def status() -> int:
     return 0
 
 
+def smoke(run_id: str | None = None) -> int:
+    try:
+        messages = run_smoke(run_id)
+    except SmokeFailure as exc:
+        print(f"GEO run smoke checks failed: {exc}")
+        return 2
+    print("GEO run smoke checks passed:")
+    for message in messages:
+        print(f"- {message}")
+    return 0
+
+
 def advance(skip_scrape: bool = False) -> int:
     ensure_db()
     state = load_state()
@@ -285,10 +342,32 @@ def advance(skip_scrape: bool = False) -> int:
         print("No active run. Run python3 run.py --init first.")
         return 2
     phase = state["current_phase"]
+    if phase == PHASE_2 and skip_scrape:
+        print("Cannot advance Phase 2 with --skip-scrape; selected URL audit coverage is required.")
+        return 2
     if phase != PHASE_3_5 and missing_required_files(state, phase) and not skip_scrape:
         missing = ", ".join(rel(path) for path in missing_required_files(state, phase))
         print(f"Cannot advance; missing required files for {phase}: {missing}")
         return 2
+    if phase == PHASE_2 and not skip_scrape:
+        missing_targets = missing_phase_2_target_urls(state)
+        if missing_targets:
+            preview = ", ".join(missing_targets[:10])
+            suffix = f" (+{len(missing_targets) - 10} more)" if len(missing_targets) > 10 else ""
+            print(
+                "Cannot advance; metadata_snapshot.md does not include "
+                f"{len(missing_targets)} selected DB target URL(s): {preview}{suffix}"
+            )
+            return 2
+        missing_statuses = missing_phase_2_target_status_urls(state)
+        if missing_statuses:
+            preview = ", ".join(missing_statuses[:10])
+            suffix = f" (+{len(missing_statuses) - 10} more)" if len(missing_statuses) > 10 else ""
+            print(
+                "Cannot advance; metadata_snapshot.md has "
+                f"{len(missing_statuses)} selected DB target URL(s) without fetch status: {preview}{suffix}"
+            )
+            return 2
     if not skip_scrape or phase == PHASE_3_5:
         sync_phase_to_db(state, phase)
     if phase == PHASE_3_5:
@@ -298,6 +377,10 @@ def advance(skip_scrape: bool = False) -> int:
         completed.append(phase)
     current_index = PHASE_ORDER.index(phase)
     if current_index == len(PHASE_ORDER) - 1:
+        smoke_status = smoke(state["run_id"])
+        if smoke_status:
+            return smoke_status
+        mark_run_completed(state)
         state["status"] = "COMPLETED"
         state["completed_phases"] = completed
         save_state(state)
@@ -319,6 +402,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-scrape", action="store_true", help="Smoke-pass a phase without requiring generated scrape files.")
     parser.add_argument("--run", action="store_true", help="Alias for --init when no active run exists.")
     parser.add_argument("--dry-run", action="store_true", help="Validate DB status without mutating run phase.")
+    parser.add_argument("--smoke", action="store_true", help="Run completed-run smoke checks against the active/latest run.")
+    parser.add_argument("--run-id", help="Run ID for --smoke.")
     return parser
 
 
@@ -329,6 +414,8 @@ def main() -> int:
         return init_run()
     if args.status or args.dry_run:
         return status()
+    if args.smoke:
+        return smoke(args.run_id)
     if args.next:
         return advance(skip_scrape=args.skip_scrape)
     parser.print_help()

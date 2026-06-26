@@ -7,19 +7,26 @@ Local dashboard for operating and reviewing the Radisson GEO Optimizer.
 Terminal 1:
 
 ```bash
-cd dashboard
-npm install
-npm run backend
+npm --prefix dashboard install
+npm --prefix dashboard run backend
 ```
 
 Terminal 2:
 
 ```bash
-cd dashboard
-npm run dev
+npm --prefix dashboard run dev -- --host 127.0.0.1
 ```
 
 Open `http://127.0.0.1:5173`.
+
+For a clean checkout, first build or provide the SQLite runtime database from the repository root:
+
+```bash
+python3 scripts/import_run_artifacts.py --json
+python3 run.py --smoke --run-id run_005
+```
+
+The full local URL Registry database is `db/geo_optimizer.db`; it is ignored by Git and should be supplied separately when a client needs the exact saved link registry and run state.
 
 ## What it wraps
 
@@ -28,7 +35,7 @@ The dashboard calls the existing runner from the repository root:
 - `python3 run.py --init`
 - `python3 run.py --status`
 - `python3 run.py --next`
-- `python3 run.py --next --skip-scrape`
+- `python3 run.py --next --skip-scrape` for non-Phase 2 local dry-runs only
 
 It reads existing artifacts from `runs/`, `memory/`, `framework/`, and `literature/`.
 On import, those artifacts are normalized into SQLite so dashboard reads come from the DB.

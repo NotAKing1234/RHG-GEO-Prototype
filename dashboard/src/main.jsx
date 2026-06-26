@@ -464,7 +464,7 @@ function SummaryBar({ data }) {
       <Metric label="Total recommendations" value={metrics.recommendations} />
       <Metric label="Ready to send" value={metrics.ready} />
       <Metric label="Need review" value={metrics.needsReview} danger={Boolean(metrics.needsReview)} />
-      <Metric label="Sources reviewed" value={metrics.sources} note="Evidence inputs" />
+      <Metric label="Inputs reviewed" value={metrics.reviewedInputs} note={metrics.reviewedInputNote} />
       <Metric label="Restricted reads" value={metrics.crawl.blockedPages} danger={Boolean(metrics.crawl.blockedPages)} note="Not recommendations" />
       <Metric label="Validation Errors" value={validationCount} danger={Boolean(validationCount)} />
     </section>
@@ -516,8 +516,11 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
               </span>
             </div>
             <div className="readiness-fact fact-sources">
-              <b>{metrics.sources}</b>
-              <span>Sources reviewed</span>
+              <b>{metrics.reviewedInputs}</b>
+              <span className="readiness-fact-label">
+                Inputs reviewed
+                <FactInfo label="Inputs reviewed" text={reviewedInputsNotation(metrics)} />
+              </span>
             </div>
           </div>
         </div>
@@ -568,7 +571,7 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
           </div>
         </div>
 
-        <CoveragePanel rows={coverageRows(data)} />
+        <CoveragePanel rows={coverageRows(data)} pageCount={runPageCoverageCount(data)} />
       </div>
 
       <div className="publish-handoff">
@@ -607,11 +610,13 @@ function OverviewView({ data, recommendations, filters, runs, setView, setPrefer
 }
 
 const COVERAGE_DEFINITIONS = [
-  ["Pages in run", "Radisson URLs included in the selected audit run. This excludes the full URL registry unless those URLs were actually selected for the run."],
-  ["Metadata", "Title, meta description, and related head fields reviewed or proposed for update."],
-  ["Schema", "Recommendations involving structured data, JSON-LD, or machine-readable entity signals."],
-  ["Copy", "Generated page, metadata, schema, and ticket-ready copy blocks available for handoff."],
-  ["Ready to send", "Proposal stories with enough evidence and review state to move into stakeholder handoff."]
+  ["Run pages", "Radisson URLs included in the selected audit run. Coverage bars are scaled against this page count, not against the largest row in the panel."],
+  ["Change suggestions", "Distinct proposed changes generated for the current run. A suggestion can touch more than one coverage category below."],
+  ["Access / crawlability", "Recommendations that change crawl access, restricted reads, robots, sitemap, llms.txt, noindex, or HTTP availability."],
+  ["Metadata", "Recommendations that change title, meta description, canonical, hreflang, Open Graph, or related head fields."],
+  ["Schema", "Recommendations involving structured data, JSON-LD, Hotel, LodgingBusiness, FAQPage, review, rating, or entity markup."],
+  ["Content / copy", "Recommendations that add visible content modules, FAQ/Q&A, amenity copy, location details, image alt text, or traveler-specific page copy."],
+  ["Trust / distribution", "Recommendations tied to reviews, ratings, OTA/GBP consistency, direct booking feeds, or AI distribution surfaces."]
 ];
 
 const EXPORT_FORMAT_NOTES = {
@@ -622,12 +627,13 @@ const EXPORT_FORMAT_NOTES = {
   audit: "Full audit exports the complete run package in a readable text format. Use it for archival review, detailed stakeholder handoff, or re-checking how proposals were generated."
 };
 
-function CoveragePanel({ rows }) {
+function CoveragePanel({ rows, pageCount }) {
   const [showInfo, setShowInfo] = useState(false);
   return (
     <div className="panel coverage-panel">
       <div className="coverage-header-row">
         <PanelHeader icon={Layers3} label="Current run" title="Coverage" />
+        <span className="coverage-context">{pageCount} pages in run</span>
         <div className="coverage-info-wrap">
           <button
             className={showInfo ? "coverage-info-button active" : "coverage-info-button"}
@@ -664,7 +670,7 @@ function CoverageRows({ rows }) {
         <div className="coverage-row" key={row.label}>
           <span>{row.label}</span>
           <strong>{row.value}</strong>
-          <div><i style={{ width: `${row.percent}%` }} /></div>
+          <div title={row.note}><i style={{ width: `${row.percent}%` }} /></div>
         </div>
       ))}
     </div>
@@ -2218,6 +2224,8 @@ function EvidenceTag({ tier }) {
 
 function ticketStateLabel(rec) {
   if (String(rec?.selector_status || "").toLowerCase().includes("warning")) return "Need review";
+  if (rec?.handoff_status === "ready-to-send") return "Ready to send";
+  if (rec?.handoff_status === "needs-review") return "Need review";
   if (rec?.evidence_tier === "Implementation-ready") return "Ready to send";
   return rec?.evidence_tier || "Review";
 }
@@ -2272,6 +2280,7 @@ function getOverviewMetrics(data) {
   const warnings = summary.selector_warnings ?? recommendations.filter(hasSelectorWarning).length;
   const errors = data?.run?.validation_errors?.length || 0;
   const ready = summary.ready_to_send ?? recommendations.filter((rec) => isImplementationReady(rec) && !hasSelectorWarning(rec)).length;
+  const needsReview = summary.needs_review ?? Math.max(0, recommendations.length - ready);
   const averageScore = recommendations.length
     ? recommendations.reduce((total, rec) => total + Number(rec.combined_score || 0), 0) / recommendations.length
     : 0;
@@ -2279,6 +2288,10 @@ function getOverviewMetrics(data) {
   const validationPenalty = errors * 4;
   const uncappedReadiness = averageScore - reviewPenalty - validationPenalty - crawl.penalty;
   const readiness = Math.round(clamp(Math.min(uncappedReadiness, crawl.cap), 0, 99));
+  const pageCount = summary.pages ?? data?.radisson_pages?.length ?? 0;
+  const evidenceSources = summary.evidence_sources ?? summary.sources ?? data?.sources?.length ?? 0;
+  const reviewedInputs = summary.reviewed_inputs ?? (pageCount + evidenceSources);
+  const reviewedInputNote = `${pageCount} audited pages + ${evidenceSources} evidence sources`;
   return {
     readiness,
     averageScore: Math.round(averageScore),
@@ -2286,8 +2299,12 @@ function getOverviewMetrics(data) {
     validationPenalty,
     recommendations: summary.recommendations ?? recommendations.length,
     ready,
-    needsReview: warnings,
-    sources: summary.sources ?? data?.sources?.length ?? 0,
+    needsReview,
+    sources: evidenceSources,
+    evidenceSources,
+    pageCount,
+    reviewedInputs,
+    reviewedInputNote,
     warnings,
     errors,
     crawl
@@ -2299,7 +2316,8 @@ function hasSelectorWarning(rec) {
 }
 
 function isImplementationReady(rec) {
-  return rec?.evidence_tier === "Implementation-ready" || (rec?.evidence_source_ids?.length || 0) >= 2;
+  if (rec?.handoff_status) return rec.handoff_status === "ready-to-send";
+  return rec?.evidence_tier === "Implementation-ready" && !hasSelectorWarning(rec);
 }
 
 function getCrawlabilityMetrics(data) {
@@ -2352,14 +2370,18 @@ function readinessNotation(metrics) {
   return "Score averages recommendation strength, then subtracts review, validation, and crawlability penalties.";
 }
 
+function reviewedInputsNotation(metrics) {
+  return `${metrics.reviewedInputs} reviewed inputs = ${metrics.pageCount} audited pages + ${metrics.evidenceSources} evidence sources.`;
+}
+
 function recommendationCountNotation(metrics) {
   const total = Number(metrics.recommendations || 0);
   const ready = Number(metrics.ready || 0);
   const needsReview = Number(metrics.needsReview || 0);
   if (total === ready + needsReview) {
-    return `${total} recommendations = ${ready} ready to send + ${needsReview} need review. Restricted reads and sources reviewed are run context, not additional recommendations.`;
+    return `${total} recommendations = ${ready} ready to send + ${needsReview} need review. Restricted reads and reviewed inputs are run context, not additional recommendations.`;
   }
-  return `${total} recommendations are proposal tickets. Restricted reads and sources reviewed are run context, not additional recommendations.`;
+  return `${total} recommendations are proposal tickets. Restricted reads and reviewed inputs are run context, not additional recommendations.`;
 }
 
 function attentionRows(data) {
@@ -2392,19 +2414,70 @@ function attentionRows(data) {
 }
 
 function coverageRows(data) {
-  const recommendations = data?.recommendations || [];
-  const summary = data?.summary || {};
-  const metrics = getOverviewMetrics(data);
-  const schemaCount = recommendations.filter((rec) => /schema|structured/i.test(`${rec.title} ${rec.surface}`)).length;
+  const suggestions = changeSuggestionCoverage(data);
+  const pageCount = runPageCoverageCount(data);
   const rows = [
-    ["Pages in run", runPageCoverageCount(data)],
-    ["Metadata", summary.metadata_changes ?? data?.metadata_changes?.length ?? 0],
-    ["Schema", schemaCount],
-    ["Copy", summary.copy_blocks ?? data?.copy_blocks?.length ?? 0],
-    ["Ready to send", metrics.ready]
+    ["Change suggestions", suggestions.total],
+    ["Access / crawlability", suggestions.byType.html_visibility],
+    ["Metadata", suggestions.byType.metadata_update],
+    ["Schema", suggestions.byType.schema_update],
+    ["Content / copy", suggestions.byType.content_update],
+    ["Trust / distribution", suggestions.byType.trust_distribution]
   ];
-  const max = Math.max(...rows.map(([, value]) => Number(value) || 0), 1);
-  return rows.map(([label, value]) => ({ label, value, percent: Math.max(8, Math.round((Number(value) / max) * 100)) }));
+  const denominator = Math.max(Number(pageCount) || 0, 1);
+  return rows.map(([label, value]) => {
+    const count = Math.max(Number(value) || 0, 0);
+    const percent = Math.min(100, (count / denominator) * 100);
+    return {
+      label,
+      value: count,
+      percent,
+      note: `${count} of ${pageCount} pages in the selected run`
+    };
+  });
+}
+
+function changeSuggestionCoverage(data) {
+  const byType = {
+    html_visibility: 0,
+    metadata_update: 0,
+    schema_update: 0,
+    content_update: 0,
+    trust_distribution: 0
+  };
+  const summarySuggestions = data?.summary?.change_suggestions;
+  if (summarySuggestions?.by_type) {
+    Object.entries(summarySuggestions.by_type).forEach(([type, value]) => {
+      if (type in byType) byType[type] = Number(value) || 0;
+    });
+    return { total: Number(summarySuggestions.total) || 0, byType };
+  }
+  const blocks = data?.copy_blocks || [];
+  if (blocks.length) {
+    blocks.forEach((block) => {
+      byType[normalizeChangeType(block.format_type)] += 1;
+    });
+    return { total: blocks.length, byType };
+  }
+  const recommendations = data?.recommendations || [];
+  recommendations.forEach((rec) => {
+    byType[normalizeChangeType(rec.change_type)] += 1;
+  });
+  return { total: recommendations.length, byType };
+}
+
+function normalizeChangeType(value) {
+  const type = String(value || "");
+  if (type in {
+    html_visibility: true,
+    metadata_update: true,
+    schema_update: true,
+    content_update: true,
+    trust_distribution: true
+  }) {
+    return type;
+  }
+  return "content_update";
 }
 
 function runPageCoverageCount(data) {

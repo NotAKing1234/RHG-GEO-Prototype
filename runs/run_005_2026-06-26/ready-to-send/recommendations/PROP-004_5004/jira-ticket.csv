@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_005,Radisson GEO Optimization - run_005,Epic container for 8 GEO optimization stories generated from run_005.,Highest,GEO,Platform,- Epic delivered when all 8 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_005,"Publish crawlable Park Plaza meeting-event pages with property-specific capacity matrices, room names, floor area, layouts, AV/Wi-Fi/caterin","Dev change specs: Publish crawlable Park Plaza meeting-event pages with property-specific capacity matrices, room names, floor area, layouts, AV/Wi-Fi/catering availability, accessibility, RFP/contact path, group-room booking path, and nearby leisure context. Add MeetingRoom/Place JSON-LD, including maximumAttendeeCapacity, floorSize, and amenityFeature, on pages such as https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference and the 76 selected property meeting URLs.
+
+SEO/GEO rationale: Meeting-event pages expose capacity, room, service, and booking facts: Meeting pages include meeting-room names/capacities, event services, Wi-Fi/AV/catering, contact or RFP path, address/proximity, and schema or clearly structured tables where possible.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Schema,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference.
+- Validation confirms the run_005_GAP-004 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

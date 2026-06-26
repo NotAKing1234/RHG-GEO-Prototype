@@ -118,3 +118,83 @@ GAP-034: Destination page — no ItemList schema (MISSING, Sev 2) — first audi
 - GBP: check Q&A sections for flagship London/Amsterdam properties.
 - Property proxy: expand to 3 properties (London, Amsterdam, Paris).
 - Review recency check: TripAdvisor Radisson Blu London — are most recent reviews within 3 months?
+
+---
+
+### run_003 → run_004 | 2026-06-24 (Country Inn DB-selected target set)
+
+**Implemented:** ZERO fully implemented recommendations. One partial technical improvement detected: `/robots.txt` now returns HTTP 200, whereas run_003 recorded it as blocked.
+
+**What changed:**
+- Current run used SQLite `run_url_targets`: 100 selected Country Inn & Suites URLs.
+- 42 selected localized pages returned HTTP 200 and exposed localized title/meta, canonical, hreflang, OG fields, `Organization` JSON-LD, and often `BreadcrumbList`.
+- 58 selected URLs returned HTTP 403 access-restricted templates, including all 23 selected English/US Country Inn URLs and all selected hotel overview/subpage URLs.
+- `/sitemap.xml` returned HTTP 403 XML AccessDenied.
+- `/llms.txt` returned HTTP 404.
+- Two public `banner-tests` URLs returned HTTP 200 with empty title/meta/canonical/OG/schema.
+
+**Unchanged / still open:**
+- Page-level public retrieval remains incomplete; English/US and hotel pages are blocked.
+- Hotel/LodgingBusiness schema remains absent on accessible selected pages.
+- FAQPage, review/aggregateRating, local/place schema depth, and direct AI distribution remain absent or unconfirmed.
+- American bleisure traveler path remains missing because the target `/en-us/` pages are inaccessible.
+
+**New gaps identified (15 total in run_004):**
+- Country Inn page-level access blocking with partial root robots improvement.
+- English/US path blocked while localized European Country Inn pages are accessible.
+- Sitemap access denied despite accessible robots.txt.
+- llms.txt missing.
+- Accessible pages limited to Organization/Breadcrumb schema, no Hotel/LodgingBusiness.
+- Individual hotel pages blocked.
+- Work-leisure and amenity data inconsistent.
+- Geographic/transport specificity weak.
+- FAQ/Q&A integrity weak.
+- Public banner-test URLs selected and metadata-empty.
+- Query fan-out coverage weak.
+- Image accessibility and visual context weak.
+- American bleisure path missing.
+- Trust/review footprint missing.
+- Direct AI travel distribution readiness missing.
+
+**Run_005 tracking targets:**
+- Confirm whether page-level 403s are fixed for `/en-us/brand/country-inn` and selected `/en-us/hotels/country-inn-*`.
+- Retest `/sitemap.xml` and `/llms.txt`.
+- Verify whether banner-test URLs are removed/noindexed/excluded from run selection.
+- Re-check schema depth on accessible pages: look specifically for `Hotel`, `LodgingBusiness`, `aggregateRating`, `Review`, and `FAQPage`.
+- Add selection hygiene checks before run initialization.
+
+---
+
+### run_004 -> run_005 | 2026-06-26 (Park Plaza DB-selected target set)
+
+**Implemented:** ZERO fully implemented recommendations. There is no direct URL overlap with run_004, so page-by-page implementation cannot be inferred. Cross-run infrastructure pattern remains unchanged: root `/robots.txt` is reachable, but selected public pages are still blocked.
+
+**What changed:**
+- Current run used SQLite `run_url_targets`: 478 selected Park Plaza URLs, all `en-us`.
+- Target mix: 14 brand URLs, 457 hotel/property URLs, 78 meeting-related URLs, and 7 offer URLs.
+- 476 selected URLs returned HTTP 403 access-restricted templates; 2 timed out.
+- `/sitemap.xml` returned HTTP 403.
+- `/llms.txt` returned HTTP 404.
+- Full coverage succeeded: every selected URL is represented in `metadata_snapshot.md` and `gap_analysis.md`.
+
+**Unchanged / still open:**
+- Page-level public retrieval remains incomplete across another brand family.
+- English/US audience path remains blocked.
+- Hotel/LodgingBusiness schema, MeetingRoom data, offer terms, reviews, amenities, and direct booking facts remain unavailable or unconfirmed because pages are blocked.
+- Target hygiene remains open because utility/picklist-like URLs entered the selected set.
+
+**New gaps identified (8 total in run_005):**
+- Park Plaza page-level access blocking across the selected set.
+- English/US locale/canonical validation blocked.
+- Property-level Hotel/LodgingBusiness schema unavailable.
+- Meeting-event data unavailable for 78 meeting-related URLs.
+- Offer/direct-booking facts unavailable for selected offer URLs.
+- `/sitemap.xml` access denied.
+- `/llms.txt` missing.
+- Utility/picklist URL selection hygiene issue.
+
+**Run_006 tracking targets:**
+- Verify whether Park Plaza selected URLs return 200 page-specific HTML after WAF/access changes.
+- Retest `/sitemap.xml` and `/llms.txt`.
+- Re-check schema depth on unblocked Park Plaza property pages: `Hotel`, `LodgingBusiness`, `MeetingRoom`, `Offer`, `aggregateRating`, `Review`, and `FAQPage`.
+- Confirm utility/picklist/test URLs are excluded from selected targets or marked noindex/disallowed.

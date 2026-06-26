@@ -11,8 +11,36 @@ GEO is replacing traditional SEO for high-intent discovery workflows inside Chat
 - Requires Claude Code.
 - No API keys are needed for v1.
 - Python stdlib is enough for the local runner and dashboard API.
+- Node.js/npm are needed for the dashboard frontend.
 - The pipeline is orchestrated by `CLAUDE.md` and initialized by `python3 run.py --init`.
 - SQLite is the system of record. Markdown and CSV files are generated or imported views.
+
+## Client quickstart
+
+From a fresh checkout, use these commands to verify the current handoff state.
+
+```bash
+# 1. Install dashboard dependencies.
+npm --prefix dashboard install
+
+# 2. Build the local SQLite read model from committed run artifacts.
+python3 scripts/import_run_artifacts.py --json
+
+# 3. Optional but recommended for full URL Registry testing:
+# place Daniel's handoff copy of db/geo_optimizer.db at db/geo_optimizer.db.
+# This runtime DB is intentionally not committed because it is local state.
+
+# 4. Run the completed-run smoke gate against the latest committed run.
+python3 run.py --smoke --run-id run_005
+
+# 5. Start the local dashboard API and frontend in two terminals.
+npm --prefix dashboard run backend
+npm --prefix dashboard run dev -- --host 127.0.0.1
+```
+
+Open `http://127.0.0.1:5173/` and select `run_005 - 2026-06-26` from the run picker. The smoke gate should report 478 selected URLs, 33 proposal-source links, 8 ready-to-send Jira CSVs, and 51 manifest assets.
+
+The current local SQLite file, `db/geo_optimizer.db`, is ignored by Git. It contains the full URL Registry and run state used during development: 58,094 URL rows, 5 runs, 595 run targets, 595 metadata snapshots, and 388 proposal-source links at the time of this handoff. If the client needs the full URL Registry filters and saved run state immediately, include that DB file separately and place it at `db/geo_optimizer.db` before starting the dashboard.
 
 ## How to run
 
@@ -30,6 +58,14 @@ python3 scripts/import_url_registry.py --historical --json
 
 The importer preserves any pending "Research Next" selections by default and loads crawl metadata used by dashboard filters: brand, region, country, locale, page type, content group, location confidence, location source, and sitemap provenance.
 
+Before treating a completed run as send-ready, run the repo smoke gate:
+
+```bash
+python3 run.py --smoke --run-id run_NNN
+```
+
+The smoke gate checks the known historical failure modes: every selected URL has a metadata snapshot, exports use the requested run ID, dashboard coverage totals are coherent, `ready-to-send/` has the required assets, each ready recommendation has a valid `jira-ticket.csv`, Phase 2.5 evidence links exist, and `memory/execution_log.md` mentions the run.
+
 **Compatibility note**
 `sources/website/target_urls.md` and `sources/website/run_targets/next_geo_run.csv` are flat-file views for inspection and legacy tooling. Do not treat them as authority when SQLite is available.
 
@@ -38,8 +74,10 @@ The importer preserves any pending "Research Next" selections by default and loa
 - `CLAUDE.md` - primary operating manual for the full GEO optimization pipeline.
 - `README.md` - project overview, setup, and run instructions.
 - `run.py` - DB-backed CLI entrypoint for initializing and advancing runs.
+- `scripts/geo_run_smoke.py` - completed-run smoke gate for known `/geo-run` failure modes.
 - `.claude/commands/geo-run.md` - slash command that triggers the end-to-end workflow in Claude Code.
 - `memory/master_summary.md` - rolling compressed memory updated after each run.
+- `memory/execution_log.md` - local automatic log of repo/tool decisions, fixes, failures, verification, and follow-ups.
 - `memory/run_index.md` - append-only ledger of completed runs.
 - `framework/` - stores run-specific GEO criteria documents generated from fresh literature research.
 - `literature/` - stores run-specific source and synthesis notes gathered during literature refresh.
@@ -47,6 +85,7 @@ The importer preserves any pending "Research Next" selections by default and loa
 - `db/geo_optimizer.db` - local SQLite system of record for run data, source insights, dashboard overrides, Jira exports, and next-run URL selections.
 - `sources/app/README.md` - placeholder for future mobile app metadata auditing.
 - `runs/` - stores timestamped per-run artifacts such as snapshots, analyses, proposals, and reflections.
+- `runs/run_NNN_YYYY-MM-DD/ready-to-send/` - generated handoff bundle for each completed run, including Jira import assets, stakeholder notes, QA checklist, Jira validation report, source/page/change CSVs, and per-recommendation files.
 - `inferred/implementation_log.md` - cumulative record of what Radisson appears to have implemented between runs.
 
 

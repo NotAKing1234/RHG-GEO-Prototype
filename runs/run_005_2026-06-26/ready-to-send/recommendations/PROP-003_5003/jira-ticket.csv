@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_005,Radisson GEO Optimization - run_005,Epic container for 8 GEO optimization stories generated from run_005.,Highest,GEO,Platform,- Epic delivered when all 8 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_005,"Generate server-rendered Hotel or LodgingBusiness JSON-LD for each Park Plaza property URL, beginning with https://www.radissonhotels.com/en","Dev change specs: Generate server-rendered Hotel or LodgingBusiness JSON-LD for each Park Plaza property URL, beginning with https://www.radissonhotels.com/en-us/hotels/park-plaza-amsterdam-airport/meeting-events and the related hotel overview pages. Use CMS fields for Hotel, PostalAddress, GeoCoordinates, amenityFeature, check-in/check-out, phone, official URL, image, star rating where official, aggregate rating only where visibly supported, and direct booking or offer URL where current. Add schema validation and visible-content parity checks to the run smoke process after access is fixed.
+
+SEO/GEO rationale: Valid hotel-specific JSON-LD exists on property pages: Hotel, LodgingBusiness, or relevant subtype JSON-LD includes name, URL, address, geo, telephone, image, description, amenityFeature, rating/review where valid, and booking/offer route where applicable.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/hotels/park-plaza-amsterdam-airport/meeting-events and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Schema;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/hotels/park-plaza-amsterdam-airport/meeting-events.
+- Validation confirms the run_005_GAP-003 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

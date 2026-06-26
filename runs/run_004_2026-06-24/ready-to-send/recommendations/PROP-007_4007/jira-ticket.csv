@@ -1,0 +1,11 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_004,Radisson GEO Optimization - run_004,Epic container for 15 GEO optimization stories generated from run_004.,Highest,GEO,Platform,- Epic delivered when all 15 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_004,"Add a reusable Country Inn work-leisure module to brand and hotel pages: desk/workspace, Wi-Fi, breakfast, meeting room, parking, late check","Dev change specs: Add a reusable Country Inn work-leisure module to brand and hotel pages: desk/workspace, Wi-Fi, breakfast, meeting room, parking, late checkout where offered, transit access, and nearby leisure. Map the same fields into amenityFeature on hotel pages. Prioritize making the English/US business-travel page and selected hotel meeting-events page crawlable first.
+
+SEO/GEO rationale: Meeting, workspace, breakfast, parking, Wi-Fi, wellness, and leisure amenities are scannable: Amenities appear in schema amenityFeature, tables, bullets, or clear sections; business amenities and leisure amenities are both present when relevant; meeting-room capacity and breakfast/parking/Wi-Fi are explicit if offered.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/fr-fr/marque/country-inn/offres-voyage-d-affaires and rerun GEO audit.",High,GEO;MeetingsandEvents,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/fr-fr/marque/country-inn/offres-voyage-d-affaires.
+- Validation confirms the run_004_GAP-007 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

@@ -1,0 +1,74 @@
+Issue Type,Epic Name,Summary,Description,Priority,Labels,Component,Acceptance Criteria
+Epic,Radisson GEO Optimization - run_005,Radisson GEO Optimization - run_005,Epic container for 8 GEO optimization stories generated from run_005.,Highest,GEO,Platform,- Epic delivered when all 8 child stories are reviewed and ready for Jira import.
+Story,Radisson GEO Optimization - run_005,"Restore HTTP 200 page-specific HTML for all public Park Plaza en-us brand, destination, hotel, meeting-event, and offer URLs selected in run","Dev change specs: Restore HTTP 200 page-specific HTML for all public Park Plaza en-us brand, destination, hotel, meeting-event, and offer URLs selected in run_005, starting with https://www.radissonhotels.com/en-us/brand/park-plaza. Add CDN/WAF allow rules for verified Googlebot, Bingbot, OAI-SearchBot, ChatGPT-User, and PerplexityBot where policy permits, and use rate limits or 429 responses for abuse instead of the access-restricted template. Validate with a 478-URL recrawl that confirms unique page titles, body fingerprints, and schema/content extraction per URL.
+
+SEO/GEO rationale: Public AI/search crawler access for every selected page: The audited URL returns HTTP 200 useful HTML or an indexable redirect; failures such as 403, AccessDenied, timeout, empty HTML, or blocked templates are recorded precisely.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/park-plaza and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Schema;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/park-plaza.
+- Validation confirms the run_005_GAP-001 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_005,"After access is restored, run a locale QA pass for every selected en-us Park Plaza URL","Dev change specs: After access is restored, run a locale QA pass for every selected en-us Park Plaza URL. Require each page to return US-English content, a self-referencing canonical, reciprocal hreflang alternates for equivalent language/region pages, and no canonical or hreflang reference to the access-restricted template. Start validation from https://www.radissonhotels.com/en-us/brand/park-plaza and extend it to all 478 selected URLs.
+
+SEO/GEO rationale: English/US and European localized pages expose coherent language, canonical, and alternate signals: HTML lang, canonical, hreflang alternates, title/meta language, and URL locale are consistent with the selected page purpose.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/park-plaza and rerun GEO audit.",Highest,GEO;Platform;Content,Platform,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/park-plaza.
+- Validation confirms the run_005_GAP-002 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_005,"Generate server-rendered Hotel or LodgingBusiness JSON-LD for each Park Plaza property URL, beginning with https://www.radissonhotels.com/en","Dev change specs: Generate server-rendered Hotel or LodgingBusiness JSON-LD for each Park Plaza property URL, beginning with https://www.radissonhotels.com/en-us/hotels/park-plaza-amsterdam-airport/meeting-events and the related hotel overview pages. Use CMS fields for Hotel, PostalAddress, GeoCoordinates, amenityFeature, check-in/check-out, phone, official URL, image, star rating where official, aggregate rating only where visibly supported, and direct booking or offer URL where current. Add schema validation and visible-content parity checks to the run smoke process after access is fixed.
+
+SEO/GEO rationale: Valid hotel-specific JSON-LD exists on property pages: Hotel, LodgingBusiness, or relevant subtype JSON-LD includes name, URL, address, geo, telephone, image, description, amenityFeature, rating/review where valid, and booking/offer route where applicable.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/hotels/park-plaza-amsterdam-airport/meeting-events and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Schema;Content,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/hotels/park-plaza-amsterdam-airport/meeting-events.
+- Validation confirms the run_005_GAP-003 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_005,"Publish crawlable Park Plaza meeting-event pages with property-specific capacity matrices, room names, floor area, layouts, AV/Wi-Fi/caterin","Dev change specs: Publish crawlable Park Plaza meeting-event pages with property-specific capacity matrices, room names, floor area, layouts, AV/Wi-Fi/catering availability, accessibility, RFP/contact path, group-room booking path, and nearby leisure context. Add MeetingRoom/Place JSON-LD, including maximumAttendeeCapacity, floorSize, and amenityFeature, on pages such as https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference and the 76 selected property meeting URLs.
+
+SEO/GEO rationale: Meeting-event pages expose capacity, room, service, and booking facts: Meeting pages include meeting-room names/capacities, event services, Wi-Fi/AV/catering, contact or RFP path, address/proximity, and schema or clearly structured tables where possible.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference and rerun GEO audit.",Highest,GEO;MeetingsandEvents;Schema,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference.
+- Validation confirms the run_005_GAP-004 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_005,Serve https://www.radissonhotels.com/sitemap.xml as public HTTP 200 XML or a sitemap index before WAF/challenge rules,"Dev change specs: Serve https://www.radissonhotels.com/sitemap.xml as public HTTP 200 XML or a sitemap index before WAF/challenge rules. Segment Park Plaza sitemap coverage by brand, hotel/property, meetings, offers, and locale alternates; include only canonical 200 URLs with accurate lastmod; reference the sitemap in /robots.txt; and submit the sitemap index in Google Search Console and Bing Webmaster Tools.
+
+SEO/GEO rationale: Public AI/search crawler access for every selected page: The audited URL returns HTTP 200 useful HTML or an indexable redirect; failures such as 403, AccessDenied, timeout, empty HTML, or blocked templates are recorded precisely.
+
+GEO visibility score: P1 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/sitemap.xml and rerun GEO audit.",Highest,GEO;MeetingsandEvents,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/sitemap.xml.
+- Validation confirms the run_005_GAP-006 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_005,"Unblock Park Plaza offer pages and add a structured offer module to each selected offer URL, beginning with https://www.radissonhotels.com/e","Dev change specs: Unblock Park Plaza offer pages and add a structured offer module to each selected offer URL, beginning with https://www.radissonhotels.com/en-us/hotel-deals/park-plaza-family. Include offer name, discount/value proposition, eligible hotels, book-by date, stay window, cancellation/refund terms, Radisson Rewards hook, support URL, official booking CTA, and Offer JSON-LD with validity fields such as validThrough where dates are present. Expire or redirect offers automatically after the end date.
+
+SEO/GEO rationale: Official booking next steps are clear and machine-readable enough for assistant handoff: Page exposes official booking CTA, rate/availability path, policy/support cues, loyalty hooks, and no ambiguity about ownership.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/hotel-deals/park-plaza-family and rerun GEO audit.",High,GEO;Commerce;Schema,Commerce,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/hotel-deals/park-plaza-family.
+- Validation confirms the run_005_GAP-005 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_005,"Remove utility, picklist, sitemap-like, and test-adjacent URL patterns from run_url_targets selection and from any generated public sitemaps","Dev change specs: Remove utility, picklist, sitemap-like, and test-adjacent URL patterns from run_url_targets selection and from any generated public sitemaps, starting with https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference/picklist. If utility endpoints must remain public, return crawlable noindex headers or disallow them in robots rules. Replace them in GEO selections with canonical production landing pages for Park Plaza properties, city/destination pages, meeting pages, and offers.
+
+SEO/GEO rationale: Selected pages are production-grade, not tests, empty shells, or thin utility pages: Selected URLs are public production pages with meaningful title, meta, canonical, content, and page purpose.
+
+GEO visibility score: P2 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference/picklist and rerun GEO audit.",High,GEO;MeetingsandEvents,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/en-us/brand/park-plaza/meeting-conference/picklist.
+- Validation confirms the run_005_GAP-008 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."
+Story,Radisson GEO Optimization - run_005,"Publish https://www.radissonhotels.com/llms.txt as a concise official Markdown orientation file with sections for Radisson Hotel Group, Park","Dev change specs: Publish https://www.radissonhotels.com/llms.txt as a concise official Markdown orientation file with sections for Radisson Hotel Group, Park Plaza, hotel discovery, meetings/events, offers, booking/support, loyalty, accessibility, and sitemap references. Generate it from approved CMS/source-of-truth data, include Last-Updated, and exclude internal/test/picklist URLs.
+
+SEO/GEO rationale: Brand can participate in assistant, connector, OTA, and metasearch travel flows: Brand pages expose availability/rate/deep-link/booking facts and there is a visible strategy for assistant surfaces or feed/API participation.
+
+GEO visibility score: P3 / severity-informed.
+
+Validation steps: Confirm the change is present on https://www.radissonhotels.com/llms.txt and rerun GEO audit.",Medium,GEO;MeetingsandEvents,Meetings & Events,"- Proposed change is implemented for https://www.radissonhotels.com/llms.txt.
+- Validation confirms the run_005_GAP-007 gap is closed or explicitly downgraded.
+- Existing visible behavior remains unchanged unless specified in the ticket."

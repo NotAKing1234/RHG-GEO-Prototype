@@ -2057,6 +2057,12 @@ input {
   margin-bottom: 0;
 }
 
+.coverage-context {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
 .coverage-info-wrap {
   position: relative;
   display: inline-flex;
@@ -2300,6 +2306,7 @@ input {
 
 .coverage-row div {
   height: 6px;
+  overflow: hidden;
   background: #ebe7df;
 }
 
