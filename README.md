@@ -1,6 +1,6 @@
 # Radisson GEO Optimizer
 
-Radisson GEO Optimizer is a local-first Claude Code project for auditing and improving Radisson Hotel Group's website discoverability inside AI-driven discovery engines. On each run it refreshes current GEO and AEO best practices, audits live Radisson metadata, analyzes gaps, researches each gap in more depth, and produces a prioritized optimization proposal tailored to American bleisure travelers traveling from the US to Europe.
+Radisson GEO Optimizer is a local-first Claude Code and Codex project for auditing and improving Radisson Hotel Group's website discoverability inside AI-driven discovery engines. On each run it refreshes current GEO and AEO best practices, audits live Radisson metadata, analyzes gaps, researches each gap in more depth, and produces a prioritized optimization proposal tailored to American bleisure travelers traveling from the US to Europe.
 
 ## Why it exists
 
@@ -8,11 +8,12 @@ GEO is replacing traditional SEO for high-intent discovery workflows inside Chat
 
 ## Setup
 
-- Requires Claude Code.
+- Supports Claude Code and Codex.
 - No API keys are needed for v1.
 - Python stdlib is enough for the local runner and dashboard API.
 - Node.js/npm are needed for the dashboard frontend.
 - The pipeline is orchestrated by `CLAUDE.md` and initialized by `python3 run.py --init`.
+- Codex entrypoints live at `.codex/commands/geo-run.md`, `.codex/commands/geo/run.md`, and `AGENTS.md`.
 - SQLite is the system of record. Markdown and CSV files are generated or imported views.
 
 ## Client quickstart
@@ -74,11 +75,13 @@ The supplied SQLite database belongs at `db/geo_optimizer.db`. At the time of ha
 
 ## How to run
 
-Open this repository in Claude Code and type `/geo-run`.
+Open this repository in Claude Code or Codex and type `/geo-run`. In Codex, `/geo/run` is also available as the explicit slash-command path.
 
-Claude Code should execute the full pipeline defined in `CLAUDE.md`: literature refresh, audit, gap analysis, targeted sub-agent research, optimization proposal, and memory updates.
+Claude Code and Codex should execute the same workflow defined in `CLAUDE.md`, `.claude/commands/geo-run.md`, and the Codex command shims under `.codex/commands/`: literature refresh, audit, gap analysis, targeted sub-agent research, optimization proposal, exports, smoke checks, and memory updates.
 
 The dashboard's Radisson Links / URL Registry view controls the next run target set. When you save links as "Research Next", the selection is stored in SQLite. The next `/geo-run` calls `python3 run.py --init`, snapshots those pending links into `run_url_targets`, and uses that run-scoped snapshot for the audit.
+
+For both Claude Code and Codex, the selected target snapshot is a complete workload. Every URL in SQLite `run_url_targets` must be processed as fully as the site allows. Do not sample, stop after representative pages, or group pages before every selected URL has a page-level audit outcome. If a page is blocked, unavailable, redirected, empty, rate-limited, timed out, or otherwise uninspectable, it still must appear in `metadata_snapshot.md` with the exact fetch status and notes, and `gap_analysis.md` must include URL-specific gaps or a per-URL coverage matrix.
 
 If the local SQLite database is rebuilt and the URL Registry shows only the small seed set, import the validated sitemap crawl registry before using Radisson Links:
 
@@ -106,6 +109,8 @@ The smoke gate checks the known historical failure modes: every selected URL has
 - `run.py` - DB-backed CLI entrypoint for initializing and advancing runs.
 - `scripts/geo_run_smoke.py` - completed-run smoke gate for known `/geo-run` failure modes.
 - `.claude/commands/geo-run.md` - slash command that triggers the end-to-end workflow in Claude Code.
+- `.codex/commands/geo-run.md` and `.codex/commands/geo/run.md` - Codex slash-command entrypoints for the same workflow.
+- `AGENTS.md` - Codex repo-level operating instructions and `/geo-run` alias.
 - `memory/master_summary.md` - rolling compressed memory updated after each run.
 - `memory/execution_log.md` - local automatic log of repo/tool decisions, fixes, failures, verification, and follow-ups.
 - `memory/run_index.md` - append-only ledger of completed runs.

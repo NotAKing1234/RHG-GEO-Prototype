@@ -129,3 +129,10 @@ Local automatic learning log for repo/tool work. Append here for meaningful disc
 - Change: Updated `README.md` and `dashboard/README.md` to make `db/geo_optimizer.db` the expected database placement path, show the exact copy command, include `run.py --status` and `run_005` smoke verification, and document the two-terminal dashboard startup commands.
 - Verification: Documentation-only change; checked rendered command flow against existing dashboard package scripts and smoke command names.
 - Follow-up: Include the actual `geo_optimizer.db` file separately when sending the repo to the client.
+
+## 2026-06-26 - Codex GEO-run alignment check
+
+- Topic: Confirm the GEO workflow is prepared for Codex as well as Claude Code.
+- Change: Updated `README.md` to describe the project as both Claude Code and Codex-ready, and expanded `.codex/commands/geo/run.md` so the repo-local Codex command carries the same active-run, no-sampling, per-link audit, blocked-page recording, ready-to-send, smoke-gate, and execution-log requirements as the Claude workflow.
+- Verification: Checked tracked repo command files, confirmed `/Users/daniel/.codex/skills/geo-run/SKILL.md` contains the full `run_url_targets` coverage rule, verified `.claude/commands/geo-run.md`, `CLAUDE.md`, `AGENTS.md`, `.codex/commands/geo-run.md`, and `.codex/commands/geo/run.md` are present and aligned on `python3 run.py --init`, SQLite target authority, and no sampling; `python3 run.py --status`; `python3 run.py --smoke --run-id run_005`; `git diff --check`.
+- Follow-up: The global Codex skill is user-level state, so the repo-local `.codex/commands/` files remain the portable GitHub handoff for client Codex use.
