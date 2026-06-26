@@ -46,3 +46,6 @@ sources/website/run_targets/
 
 # Large generated UI evidence
 analysis/video-evidence/
+
+# Update Planning specs
+V1_1_DATA_MODEL_SPEC.md
