@@ -136,3 +136,10 @@ Local automatic learning log for repo/tool work. Append here for meaningful disc
 - Change: Updated `README.md` to describe the project as both Claude Code and Codex-ready, and expanded `.codex/commands/geo/run.md` so the repo-local Codex command carries the same active-run, no-sampling, per-link audit, blocked-page recording, ready-to-send, smoke-gate, and execution-log requirements as the Claude workflow.
 - Verification: Checked tracked repo command files, confirmed `/Users/daniel/.codex/skills/geo-run/SKILL.md` contains the full `run_url_targets` coverage rule, verified `.claude/commands/geo-run.md`, `CLAUDE.md`, `AGENTS.md`, `.codex/commands/geo-run.md`, and `.codex/commands/geo/run.md` are present and aligned on `python3 run.py --init`, SQLite target authority, and no sampling; `python3 run.py --status`; `python3 run.py --smoke --run-id run_005`; `git diff --check`.
 - Follow-up: The global Codex skill is user-level state, so the repo-local `.codex/commands/` files remain the portable GitHub handoff for client Codex use.
+
+## 2026-06-26 - GitHub README handoff page
+
+- Topic: Update the repository README for the GitHub landing page and client handoff.
+- Change: Rewrote `README.md` as a clearer GitHub front page with project purpose, requirements, supplied database placement for both raw `.db` and zipped handoff files, dashboard startup commands, fallback artifact import, Claude Code/Codex `/geo-run` entrypoints, and key project paths. Added `db/*.zip` to `.gitignore` so the separately supplied database archive can remain local without being committed.
+- Verification: Checked README commands against existing package scripts and run smoke commands; `git diff --check`.
+- Follow-up: Send the database file or zip separately from GitHub and instruct the client to place it at `db/geo_optimizer.db`.

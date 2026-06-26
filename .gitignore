@@ -25,6 +25,7 @@ pip-log.txt
 db/*.db
 db/*.db-shm
 db/*.db-wal
+db/*.zip
 
 # Node / Vite dashboard output
 dashboard/node_modules/
