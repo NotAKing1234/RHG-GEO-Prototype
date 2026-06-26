@@ -17,30 +17,60 @@ GEO is replacing traditional SEO for high-intent discovery workflows inside Chat
 
 ## Client quickstart
 
-From a fresh checkout, use these commands to verify the current handoff state.
+Use this path when you receive the repository plus the separate GEO Optimizer SQLite database file.
+
+1. Clone or unzip the repository.
+
+2. Place the supplied database file at the repo root path below. The file name must be exactly `geo_optimizer.db`.
 
 ```bash
-# 1. Install dashboard dependencies.
+mkdir -p db
+cp /path/to/supplied/geo_optimizer.db db/geo_optimizer.db
+```
+
+If a file already exists at `db/geo_optimizer.db`, replace it with the supplied handoff database before starting the dashboard. The database is intentionally ignored by Git because it is runtime state.
+
+3. Install dashboard dependencies from the repository root.
+
+```bash
 npm --prefix dashboard install
+```
 
-# 2. Build the local SQLite read model from committed run artifacts.
-python3 scripts/import_run_artifacts.py --json
+4. Verify the database and latest completed run.
 
-# 3. Optional but recommended for full URL Registry testing:
-# place Daniel's handoff copy of db/geo_optimizer.db at db/geo_optimizer.db.
-# This runtime DB is intentionally not committed because it is local state.
-
-# 4. Run the completed-run smoke gate against the latest committed run.
+```bash
+python3 run.py --status
 python3 run.py --smoke --run-id run_005
+```
 
-# 5. Start the local dashboard API and frontend in two terminals.
+The smoke gate should report 478 selected URLs, 33 proposal-source links, 8 ready-to-send Jira CSVs, and 51 manifest assets for `run_005`.
+
+5. Start the dashboard. Use two terminals from the repository root.
+
+Terminal 1:
+
+```bash
 npm --prefix dashboard run backend
+```
+
+Terminal 2:
+
+```bash
 npm --prefix dashboard run dev -- --host 127.0.0.1
 ```
 
-Open `http://127.0.0.1:5173/` and select `run_005 - 2026-06-26` from the run picker. The smoke gate should report 478 selected URLs, 33 proposal-source links, 8 ready-to-send Jira CSVs, and 51 manifest assets.
+6. Open the dashboard at `http://127.0.0.1:5173/` and select `run_005 - 2026-06-26` from the run picker.
 
-The current local SQLite file, `db/geo_optimizer.db`, is ignored by Git. It contains the full URL Registry and run state used during development: 58,094 URL rows, 5 runs, 595 run targets, 595 metadata snapshots, and 388 proposal-source links at the time of this handoff. If the client needs the full URL Registry filters and saved run state immediately, include that DB file separately and place it at `db/geo_optimizer.db` before starting the dashboard.
+If the supplied database file is not available, build a reduced local read model from committed artifacts instead:
+
+```bash
+python3 scripts/import_run_artifacts.py --json
+python3 run.py --smoke --run-id run_005
+```
+
+This fallback is enough to review completed runs and exports. It does not replace the supplied database for the full saved URL Registry state.
+
+The supplied SQLite database belongs at `db/geo_optimizer.db`. At the time of handoff it contains the full URL Registry and run state used during development: 58,094 URL rows, 5 runs, 595 run targets, 595 metadata snapshots, and 388 proposal-source links.
 
 ## How to run
 

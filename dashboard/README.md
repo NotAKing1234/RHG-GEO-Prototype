@@ -4,6 +4,15 @@ Local dashboard for operating and reviewing the Radisson GEO Optimizer.
 
 ## Run locally
 
+From the repository root, place the supplied GEO Optimizer SQLite database here before starting the app:
+
+```bash
+mkdir -p db
+cp /path/to/supplied/geo_optimizer.db db/geo_optimizer.db
+```
+
+The expected runtime database path is `db/geo_optimizer.db`.
+
 Terminal 1:
 
 ```bash
@@ -19,11 +28,17 @@ npm --prefix dashboard run dev -- --host 127.0.0.1
 
 Open `http://127.0.0.1:5173`.
 
-For a clean checkout, first build or provide the SQLite runtime database from the repository root:
+To verify the supplied database and latest completed run before opening the dashboard:
+
+```bash
+python3 run.py --status
+python3 run.py --smoke --run-id run_005
+```
+
+If the supplied database is unavailable, build a reduced read model from committed artifacts:
 
 ```bash
 python3 scripts/import_run_artifacts.py --json
-python3 run.py --smoke --run-id run_005
 ```
 
 The full local URL Registry database is `db/geo_optimizer.db`; it is ignored by Git and should be supplied separately when a client needs the exact saved link registry and run state.

@@ -122,3 +122,10 @@ Local automatic learning log for repo/tool work. Append here for meaningful disc
 - Local DB note: `db/geo_optimizer.db` remains ignored by Git and was refreshed locally; it contained 58,094 URL rows, 5 runs, 595 run targets, 595 metadata snapshots, and 388 proposal-source links after import.
 - Verification: Temporary clean DB import plus smoke for `run_005` passed; `python3 scripts/import_run_artifacts.py --json`; `python3 -m unittest discover -s tests -p 'test*.py'` passed 33 tests; `python3 run.py --smoke --run-id run_005` passed; `npm --prefix dashboard run build` passed.
 - Follow-up: Send `db/geo_optimizer.db` separately only if the client needs the exact full URL Registry and saved dashboard state immediately; committed artifacts can rebuild the completed-run read model.
+
+## 2026-06-26 - Client database startup README clarification
+
+- Topic: Clarify client startup instructions for the separately supplied GEO Optimizer SQLite database.
+- Change: Updated `README.md` and `dashboard/README.md` to make `db/geo_optimizer.db` the expected database placement path, show the exact copy command, include `run.py --status` and `run_005` smoke verification, and document the two-terminal dashboard startup commands.
+- Verification: Documentation-only change; checked rendered command flow against existing dashboard package scripts and smoke command names.
+- Follow-up: Include the actual `geo_optimizer.db` file separately when sending the repo to the client.
